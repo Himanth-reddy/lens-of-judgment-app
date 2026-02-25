@@ -1,37 +1,46 @@
 import { Search, TrendingUp, Clock, X } from "lucide-react";
 import Header from "@/components/Header";
 import MovieCard from "@/components/MovieCard";
-import { useState } from "react";
-
-import movie1 from "@/assets/movie-1.jpg";
-import movie2 from "@/assets/movie-2.jpg";
-import movie3 from "@/assets/movie-3.jpg";
-import movie4 from "@/assets/movie-4.jpg";
-import movie5 from "@/assets/movie-5.jpg";
-import movie6 from "@/assets/movie-6.jpg";
-import movie7 from "@/assets/movie-7.jpg";
-import movie8 from "@/assets/movie-8.jpg";
-
-const allMovies = [
-  { id: "shadow-protocol", title: "Shadow Protocol", image: movie1, tag: "New Movie" },
-  { id: "echoes-of-love", title: "Echoes of Love", image: movie2, tag: "New Movie" },
-  { id: "neon-uprising", title: "Neon Uprising", image: movie3, tag: "New Movie" },
-  { id: "the-hollow", title: "The Hollow", image: movie4, tag: "New Movie" },
-  { id: "sky-realm", title: "Sky Realm", image: movie5, tag: "New Trailer" },
-  { id: "blood-money", title: "Blood Money", image: movie6, tag: "New Episode" },
-  { id: "double-trouble", title: "Double Trouble", image: movie7, tag: "New Movie" },
-  { id: "empires-fall", title: "Empire's Fall", image: movie8, tag: "New Season" },
-];
+import { useState, useEffect } from "react";
+import api from "@/lib/api";
 
 const trendingSearches = ["Shadow Protocol", "Neon Uprising", "Best Thrillers 2026", "Sci-Fi Movies", "Animated Films"];
 const recentSearches = ["The Hollow", "Blood Money", "Romance movies"];
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const results = query.length > 0
-    ? allMovies.filter((m) => m.title.toLowerCase().includes(query.toLowerCase()))
-    : [];
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (query.length === 0) {
+        setResults([]);
+        return;
+      }
+      setLoading(true);
+      try {
+        const response = await api.get("/movies/search", { params: { query } });
+        const movies = response.data.map((m: any) => ({
+          id: m.id.toString(),
+          title: m.title,
+          image: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : "https://placehold.co/200x300?text=No+Image",
+          tag: "Result",
+        }));
+        setResults(movies);
+      } catch (error) {
+        console.error("Error searching movies:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(() => {
+      fetchResults();
+    }, 500);
+
+    return () => clearTimeout(debounce);
+  }, [query]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -60,7 +69,9 @@ const SearchPage = () => {
         {/* Results */}
         {query.length > 0 ? (
           <div>
-            <p className="text-sm text-muted-foreground mb-4">{results.length} results for "{query}"</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {loading ? "Searching..." : `${results.length} results for "${query}"`}
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {results.map((movie, i) => (
                 <div key={movie.id} className="animate-scale-in" style={{ animationDelay: `${i * 0.05}s`, opacity: 0 }}>
@@ -68,7 +79,7 @@ const SearchPage = () => {
                 </div>
               ))}
             </div>
-            {results.length === 0 && (
+            {!loading && results.length === 0 && (
               <div className="text-center py-16 text-muted-foreground animate-fade-in">
                 <Search size={48} className="mx-auto mb-4 opacity-20" />
                 <p>No results found for "{query}"</p>

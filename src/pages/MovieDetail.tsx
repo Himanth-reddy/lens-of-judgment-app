@@ -1,35 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Share2 } from "lucide-react";
 import Header from "@/components/Header";
 import RatingMeter from "@/components/RatingMeter";
 import ReviewForm from "@/components/ReviewForm";
-
-import movie1 from "@/assets/movie-1.jpg";
-import movie2 from "@/assets/movie-2.jpg";
-import movie3 from "@/assets/movie-3.jpg";
-import movie4 from "@/assets/movie-4.jpg";
-import movie5 from "@/assets/movie-5.jpg";
-import movie6 from "@/assets/movie-6.jpg";
-import movie7 from "@/assets/movie-7.jpg";
-import movie8 from "@/assets/movie-8.jpg";
-
-const movieData: Record<string, { title: string; image: string; genre: string; year: string }> = {
-  "shadow-protocol": { title: "Shadow Protocol", image: movie1, genre: "Thriller", year: "2026" },
-  "echoes-of-love": { title: "Echoes of Love", image: movie2, genre: "Romance", year: "2026" },
-  "neon-uprising": { title: "Neon Uprising", image: movie3, genre: "Sci-Fi", year: "2026" },
-  "the-hollow": { title: "The Hollow", image: movie4, genre: "Horror", year: "2026" },
-  "sky-realm": { title: "Sky Realm", image: movie5, genre: "Animation", year: "2026" },
-  "blood-money": { title: "Blood Money", image: movie6, genre: "Crime", year: "2026" },
-  "double-trouble": { title: "Double Trouble", image: movie7, genre: "Action", year: "2026" },
-  "empires-fall": { title: "Empire's Fall", image: movie8, genre: "Epic", year: "2026" },
-};
-
-const sampleReviews: { user: string; rating: string; text: string; likes: number }[] = [
-  { user: "CinemaFan", rating: "Perfection", text: "Absolutely stunning! The cinematography alone makes it worth watching.", likes: 24 },
-  { user: "MovieBuff", rating: "Go for it", text: "Solid movie with great performances. A few slow moments but overall enjoyable.", likes: 12 },
-  { user: "CriticalEye", rating: "Timepass", text: "It's okay for a one-time watch. Nothing groundbreaking.", likes: 5 },
-];
+import api from "@/lib/api";
 
 const ratingColorMap: Record<string, string> = {
   Perfection: "bg-accent text-accent-foreground",
@@ -38,13 +13,71 @@ const ratingColorMap: Record<string, string> = {
   Skip: "bg-meter-skip text-foreground",
 };
 
-type ReviewRating = "Skip" | "Timepass" | "Go for it" | "Perfection";
+interface Review {
+  user: string;
+  rating: string;
+  text: string;
+  likes: number;
+}
 
 const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const movie = movieData[id || ""];
-  const [reviews, setReviews] = useState(sampleReviews);
+  const [movie, setMovie] = useState<any>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("Most Liked");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const movieRes = await api.get(`/movies/${id}`);
+        setMovie({
+          title: movieRes.data.title,
+          image: `https://image.tmdb.org/t/p/w500${movieRes.data.poster_path}`,
+          genre: movieRes.data.genres?.map((g: any) => g.name).join(", ") || "Unknown",
+          year: movieRes.data.release_date?.split("-")[0] || "Unknown",
+        });
+
+        const reviewsRes = await api.get(`/reviews/${id}`);
+        setReviews(reviewsRes.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const handleReviewSubmit = async (rating: string, text: string) => {
+    if (!id) return;
+    try {
+      const newReview = {
+        movieId: id,
+        user: "You", // Hardcoded user for now
+        rating,
+        text,
+      };
+      await api.post("/reviews", newReview);
+      setReviews([{ ...newReview, likes: 0 }, ...reviews]);
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    }
+  };
+
+  if (loading) {
+     return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-20 text-center">
+          <p className="text-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!movie) {
     return (
@@ -118,9 +151,7 @@ const MovieDetail = () => {
 
           {/* Review Form */}
           <div className="mb-6">
-            <ReviewForm onSubmit={(rating, text) => {
-              setReviews([{ user: "You", rating, text, likes: 0 }, ...reviews]);
-            }} />
+            <ReviewForm onSubmit={handleReviewSubmit} />
           </div>
 
           {/* Reviews List */}
@@ -130,17 +161,17 @@ const MovieDetail = () => {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground text-xs font-semibold">
-                      {review.user[0].toUpperCase()}
+                      {(review.user && review.user[0]) ? review.user[0].toUpperCase() : "?"}
                     </div>
                     <span className="text-sm font-medium text-foreground">@{review.user}</span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingColorMap[review.rating]}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingColorMap[review.rating] || "bg-secondary"}`}>
                     {review.rating}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">{review.text}</p>
                 <div className="mt-3 text-xs text-muted-foreground">
-                  ♥ {review.likes} likes
+                  ♥ {review.likes || 0} likes
                 </div>
               </div>
             ))}

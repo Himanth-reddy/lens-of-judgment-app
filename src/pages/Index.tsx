@@ -1,37 +1,52 @@
+import { useEffect, useState } from "react";
 import { Flame, Heart, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import MovieCard from "@/components/MovieCard";
 import MostInterestedCard from "@/components/MostInterestedCard";
+import api from "@/lib/api";
 
-import movie1 from "@/assets/movie-1.jpg";
-import movie2 from "@/assets/movie-2.jpg";
-import movie3 from "@/assets/movie-3.jpg";
-import movie4 from "@/assets/movie-4.jpg";
-import movie5 from "@/assets/movie-5.jpg";
-import movie6 from "@/assets/movie-6.jpg";
-import movie7 from "@/assets/movie-7.jpg";
-import movie8 from "@/assets/movie-8.jpg";
-
-const movies = [
-  { id: "shadow-protocol", title: "Shadow Protocol", image: movie1, tag: "New Movie" },
-  { id: "echoes-of-love", title: "Echoes of Love", image: movie2, tag: "New Movie" },
-  { id: "neon-uprising", title: "Neon Uprising", image: movie3, tag: "New Movie" },
-  { id: "the-hollow", title: "The Hollow", image: movie4, tag: "New Movie" },
-  { id: "sky-realm", title: "Sky Realm", image: movie5, tag: "New Trailer" },
-  { id: "blood-money", title: "Blood Money", image: movie6, tag: "New Episode" },
-  { id: "double-trouble", title: "Double Trouble", image: movie7, tag: "New Movie" },
-  { id: "empires-fall", title: "Empire's Fall", image: movie8, tag: "New Season" },
-];
-
-const mostInterested = [
-  { rank: 1, title: "Shadow Protocol", date: "20 Feb, 2026", status: "In Theatre", interested: 593, image: movie1 },
-  { rank: 2, title: "Neon Uprising", date: "20 Feb, 2026", status: "In Theatre", interested: 391, image: movie3 },
-  { rank: 3, title: "The Hollow", date: "25 Feb, 2026", status: "Streaming", interested: 284, image: movie4 },
-];
-
-const editorsPickMovies = movies.slice(0, 5);
+interface Movie {
+  id: string;
+  title: string;
+  image: string;
+  tag: string;
+}
 
 const Index = () => {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [mostInterested, setMostInterested] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const response = await api.get("/movies/popular");
+        const popularMovies = response.data.map((m: any) => ({
+          id: m.id.toString(),
+          title: m.title,
+          image: `https://image.tmdb.org/t/p/w500${m.poster_path}`,
+          tag: "Popular",
+        }));
+        setMovies(popularMovies);
+
+        // Mock "Most Interested" for now based on popular movies
+        setMostInterested(popularMovies.slice(0, 3).map((m: any, i: number) => ({
+          rank: i + 1,
+          title: m.title,
+          date: "Release Date", // TMDB data has release_date but let's keep it simple
+          status: "Released",
+          interested: Math.floor(Math.random() * 1000),
+          image: m.image
+        })));
+      } catch (error) {
+        console.error("Failed to fetch movies", error);
+      }
+    };
+
+    fetchMovies();
+  }, []);
+
+  const editorsPickMovies = movies.slice(0, 5);
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Ambient background glows */}
