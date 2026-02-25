@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Eye, EyeOff, Mail, Lock, User, Film, Sparkles, Star, Clapperboard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LOJLogo from "@/components/LOJLogo";
@@ -158,13 +159,21 @@ const AuthPage = () => {
                     className="pl-10 pr-10 bg-secondary/30 border-border/50 focus:border-primary/50 h-12 rounded-xl"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{showPassword ? "Hide password" : "Show password"}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
