@@ -6,23 +6,23 @@
 
 @layer base {
   :root {
-    --background: 0 0% 7%;
+    --background: 240 6% 7%;
     --foreground: 0 0% 95%;
 
-    --card: 0 0% 10%;
+    --card: 240 5% 11%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 10%;
+    --popover: 240 5% 11%;
     --popover-foreground: 0 0% 95%;
 
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 15%;
+    --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 3% 50%;
 
     --accent: 270 60% 55%;
     --accent-foreground: 0 0% 100%;
@@ -30,24 +30,28 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
+    --border: 240 4% 18%;
+    --input: 240 4% 18%;
     --ring: 25 95% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --meter-perfection: 270 60% 55%;
-    --meter-goforit: 145 60% 45%;
-    --meter-timepass: 40 95% 55%;
+    --meter-goforit: 160 70% 42%;
+    --meter-timepass: 45 100% 55%;
     --meter-skip: 0 80% 55%;
 
-    --sidebar-background: 0 0% 8%;
+    --glow-primary: 25 95% 53%;
+    --glow-accent: 270 60% 55%;
+    --glow-teal: 175 70% 45%;
+
+    --sidebar-background: 240 6% 8%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent: 240 4% 14%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 18%;
+    --sidebar-border: 240 4% 18%;
     --sidebar-ring: 25 95% 53%;
   }
 }
@@ -70,5 +74,29 @@
 @layer utilities {
   .font-display {
     font-family: 'Bebas Neue', sans-serif;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--glow-primary) / 0.3), 0 0 60px hsl(var(--glow-primary) / 0.1);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--glow-accent) / 0.3), 0 0 60px hsl(var(--glow-accent) / 0.1);
+  }
+
+  .glow-teal {
+    box-shadow: 0 0 20px hsl(var(--glow-teal) / 0.3), 0 0 60px hsl(var(--glow-teal) / 0.1);
+  }
+
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  .story-link * {
+    @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
   }
 }
