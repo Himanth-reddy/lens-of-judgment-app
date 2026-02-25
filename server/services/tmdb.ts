@@ -15,10 +15,27 @@ const getClient = () => {
   });
 };
 
+interface Movie {
+  id: number;
+  title: string;
+  poster_path: string | null;
+}
+
+let popularMoviesCache: Movie[] | null = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 1000 * 60 * 10; // 10 minutes
+
 export const getPopularMovies = async () => {
+  const now = Date.now();
+  if (popularMoviesCache && now - lastFetchTime < CACHE_DURATION) {
+    return popularMoviesCache;
+  }
+
   try {
     const response = await getClient().get("/movie/popular");
-    return response.data.results;
+    popularMoviesCache = response.data.results;
+    lastFetchTime = now;
+    return popularMoviesCache;
   } catch (error) {
     console.error("Error fetching popular movies:", error);
     throw error;
