@@ -5,7 +5,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const getClient = () => {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
-    console.warn("TMDB_API_KEY is not set. TMDB calls will fail.");
+    throw new Error("TMDB_API_KEY is not set. TMDB calls will fail.");
   }
   return axios.create({
     baseURL: TMDB_BASE_URL,
@@ -21,7 +21,7 @@ export const getPopularMovies = async () => {
     return response.data.results;
   } catch (error) {
     console.error("Error fetching popular movies:", error);
-    return [];
+    throw error;
   }
 };
 
@@ -33,7 +33,7 @@ export const searchMovies = async (query: string) => {
     return response.data.results;
   } catch (error) {
     console.error("Error searching movies:", error);
-    return [];
+    throw error;
   }
 };
 
@@ -42,7 +42,10 @@ export const getMovieDetails = async (id: string) => {
     const response = await getClient().get(`/movie/${id}`);
     return response.data;
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
     console.error("Error fetching movie details:", error);
-    return null;
+    throw error;
   }
 };

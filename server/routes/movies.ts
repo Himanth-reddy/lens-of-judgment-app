@@ -1,5 +1,5 @@
 import express from "express";
-import { getPopularMovies, searchMovies, getMovieDetails } from "../services/tmdb.ts";
+import { getPopularMovies, searchMovies, getMovieDetails } from "../services/tmdb.js";
 
 const router = express.Router();
 
@@ -8,8 +8,7 @@ router.get("/popular", async (req, res) => {
     const movies = await getPopularMovies();
     res.json(movies);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(502).json({ message: "Upstream Error" });
   }
 });
 
@@ -22,8 +21,7 @@ router.get("/search", async (req, res) => {
     const movies = await searchMovies(query);
     res.json(movies);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(502).json({ message: "Upstream Error" });
   }
 });
 
@@ -35,8 +33,7 @@ router.get("/:id", async (req, res) => {
     }
     res.json(movie);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(502).json({ message: "Upstream Error" });
   }
 });
 

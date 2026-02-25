@@ -35,7 +35,7 @@ const MovieDetail = () => {
         const movieRes = await api.get(`/movies/${id}`);
         setMovie({
           title: movieRes.data.title,
-          image: `https://image.tmdb.org/t/p/w500${movieRes.data.poster_path}`,
+          image: movieRes.data.poster_path ? `https://image.tmdb.org/t/p/w500${movieRes.data.poster_path}` : "https://placehold.co/200x300?text=No+Image",
           genre: movieRes.data.genres?.map((g: any) => g.name).join(", ") || "Unknown",
           year: movieRes.data.release_date?.split("-")[0] || "Unknown",
         });
@@ -62,7 +62,7 @@ const MovieDetail = () => {
         text,
       };
       await api.post("/reviews", newReview);
-      setReviews([{ ...newReview, likes: 0 }, ...reviews]);
+      setReviews((prevReviews) => [{ ...newReview, likes: 0 }, ...prevReviews]);
     } catch (error) {
       console.error("Error submitting review:", error);
     }

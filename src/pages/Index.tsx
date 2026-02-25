@@ -23,7 +23,7 @@ const Index = () => {
         const popularMovies = response.data.map((m: any) => ({
           id: m.id.toString(),
           title: m.title,
-          image: `https://image.tmdb.org/t/p/w500${m.poster_path}`,
+          image: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : "https://placehold.co/200x300?text=No+Image",
           tag: "Popular",
         }));
         setMovies(popularMovies);

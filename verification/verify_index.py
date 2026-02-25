@@ -1,8 +1,12 @@
+import os
 from playwright.sync_api import sync_playwright
 
 def run(playwright):
     browser = playwright.chromium.launch(headless=True)
     page = browser.new_page()
+
+    port = os.environ.get("PORT", "8080")
+    base_url = f"http://localhost:{port}"
 
     # Mock API response
     page.route("**/api/movies/popular", lambda route: route.fulfill(
@@ -19,7 +23,7 @@ def run(playwright):
     ))
 
     try:
-        page.goto("http://localhost:8080")
+        page.goto(base_url)
         page.wait_for_selector("text=Mock Movie 1", timeout=10000)
         page.screenshot(path="verification/index.png")
         print("Verification successful")

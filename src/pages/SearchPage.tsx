@@ -1,7 +1,7 @@
 import { Search, TrendingUp, Clock, X } from "lucide-react";
 import Header from "@/components/Header";
 import MovieCard from "@/components/MovieCard";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
 
 const trendingSearches = ["Shadow Protocol", "Neon Uprising", "Best Thrillers 2026", "Sci-Fi Movies", "Animated Films"];
@@ -11,16 +11,26 @@ const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const fetchResults = async () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
       if (query.length === 0) {
         setResults([]);
+        setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const response = await api.get("/movies/search", { params: { query } });
+        const response = await api.get("/movies/search", {
+          params: { query },
+          signal: abortControllerRef.current.signal
+        });
         const movies = response.data.map((m: any) => ({
           id: m.id.toString(),
           title: m.title,
@@ -28,10 +38,14 @@ const SearchPage = () => {
           tag: "Result",
         }));
         setResults(movies);
-      } catch (error) {
-        console.error("Error searching movies:", error);
+      } catch (error: any) {
+        if (error.name !== 'CanceledError') {
+             console.error("Error searching movies:", error);
+        }
       } finally {
-        setLoading(false);
+        if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
+             setLoading(false);
+        }
       }
     };
 
@@ -39,7 +53,12 @@ const SearchPage = () => {
       fetchResults();
     }, 500);
 
-    return () => clearTimeout(debounce);
+    return () => {
+        clearTimeout(debounce);
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+    };
   }, [query]);
 
   return (
