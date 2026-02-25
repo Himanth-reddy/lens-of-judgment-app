@@ -1,0 +1,125 @@
+import { Search, TrendingUp, Clock, X } from "lucide-react";
+import Header from "@/components/Header";
+import MovieCard from "@/components/MovieCard";
+import { useState } from "react";
+
+import movie1 from "@/assets/movie-1.jpg";
+import movie2 from "@/assets/movie-2.jpg";
+import movie3 from "@/assets/movie-3.jpg";
+import movie4 from "@/assets/movie-4.jpg";
+import movie5 from "@/assets/movie-5.jpg";
+import movie6 from "@/assets/movie-6.jpg";
+import movie7 from "@/assets/movie-7.jpg";
+import movie8 from "@/assets/movie-8.jpg";
+
+const allMovies = [
+  { id: "shadow-protocol", title: "Shadow Protocol", image: movie1, tag: "New Movie" },
+  { id: "echoes-of-love", title: "Echoes of Love", image: movie2, tag: "New Movie" },
+  { id: "neon-uprising", title: "Neon Uprising", image: movie3, tag: "New Movie" },
+  { id: "the-hollow", title: "The Hollow", image: movie4, tag: "New Movie" },
+  { id: "sky-realm", title: "Sky Realm", image: movie5, tag: "New Trailer" },
+  { id: "blood-money", title: "Blood Money", image: movie6, tag: "New Episode" },
+  { id: "double-trouble", title: "Double Trouble", image: movie7, tag: "New Movie" },
+  { id: "empires-fall", title: "Empire's Fall", image: movie8, tag: "New Season" },
+];
+
+const trendingSearches = ["Shadow Protocol", "Neon Uprising", "Best Thrillers 2026", "Sci-Fi Movies", "Animated Films"];
+const recentSearches = ["The Hollow", "Blood Money", "Romance movies"];
+
+const SearchPage = () => {
+  const [query, setQuery] = useState("");
+
+  const results = query.length > 0
+    ? allMovies.filter((m) => m.title.toLowerCase().includes(query.toLowerCase()))
+    : [];
+
+  return (
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="fixed top-1/2 left-1/3 w-72 h-72 bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <Header />
+
+      <main className="container py-8 max-w-3xl mx-auto">
+        {/* Search bar */}
+        <div className="relative mb-8 animate-fade-in">
+          <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search movies, series, people..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full bg-card border border-border rounded-xl pl-12 pr-12 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all text-lg"
+            autoFocus
+          />
+          {query && (
+            <button onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Results */}
+        {query.length > 0 ? (
+          <div>
+            <p className="text-sm text-muted-foreground mb-4">{results.length} results for "{query}"</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {results.map((movie, i) => (
+                <div key={movie.id} className="animate-scale-in" style={{ animationDelay: `${i * 0.05}s`, opacity: 0 }}>
+                  <MovieCard {...movie} />
+                </div>
+              ))}
+            </div>
+            {results.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground animate-fade-in">
+                <Search size={48} className="mx-auto mb-4 opacity-20" />
+                <p>No results found for "{query}"</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Trending */}
+            <section className="animate-slide-up" style={{ animationDelay: "0.1s", opacity: 0 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={16} className="text-primary" />
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Trending</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {trendingSearches.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setQuery(s)}
+                    className="px-4 py-2 rounded-full bg-card border border-border text-sm text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-200"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Recent */}
+            <section className="animate-slide-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Clock size={16} className="text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Recent Searches</h2>
+              </div>
+              <div className="space-y-1">
+                {recentSearches.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setQuery(s)}
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-card transition-all duration-200 text-left"
+                  >
+                    <Clock size={14} className="opacity-40" />
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default SearchPage;
