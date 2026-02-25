@@ -1,11 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "target": "ES6",
+    "module": "NodeNext",
+    "target": "ES2022",
     "outDir": "dist-server",
-    "rootDir": ".",
-    "moduleResolution": "node",
+    "rootDir": "./server",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
