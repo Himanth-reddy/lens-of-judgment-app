@@ -12,6 +12,16 @@ router.get("/:movieId", async (req, res) => {
   }
 });
 
+// Get reviews by a specific user
+router.get("/user/:username", async (req, res) => {
+  try {
+    const reviews = await Review.find({ user: req.params.username }).sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 router.post("/", async (req, res) => {
   const { movieId, user, rating, text } = req.body;
 
@@ -38,6 +48,12 @@ router.post("/", async (req, res) => {
   }
 
   try {
+    // Check for duplicate review
+    const existingReview = await Review.findOne({ movieId, user });
+    if (existingReview) {
+      return res.status(409).json({ message: "You have already reviewed this movie" });
+    }
+
     const newReview = new Review({
       movieId,
       user,
@@ -47,6 +63,31 @@ router.post("/", async (req, res) => {
 
     const savedReview = await newReview.save();
     res.status(201).json(savedReview);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Delete a review
+router.delete("/:reviewId", async (req, res) => {
+  const { user } = req.body;
+
+  if (!user || typeof user !== "string") {
+    return res.status(400).json({ message: "User is required" });
+  }
+
+  try {
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    if (review.user !== user) {
+      return res.status(403).json({ message: "Not authorized to delete this review" });
+    }
+
+    await Review.findByIdAndDelete(req.params.reviewId);
+    res.json({ message: "Review deleted" });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

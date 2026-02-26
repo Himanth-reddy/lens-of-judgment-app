@@ -5,6 +5,7 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
+  tags: string[];
   createdAt: Date;
   matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
@@ -23,6 +24,10 @@ const userSchema = new Schema<IUser>({
   password: {
     type: String,
     required: true,
+  },
+  tags: {
+    type: [String],
+    default: [],
   },
   createdAt: {
     type: Date,

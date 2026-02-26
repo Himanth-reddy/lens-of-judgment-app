@@ -1,11 +1,15 @@
-import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2 } from "lucide-react";
+import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Plus, Tag } from "lucide-react";
 import Header from "@/components/Header";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import api from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const tabs = ["Reviews", "Watchlist", "Liked"];
+
+const DEFAULT_TAGS = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance", "Thriller", "Documentary"];
 
 const ratingBadge: Record<string, string> = {
   Perfection: "bg-accent/20 text-accent",
@@ -14,14 +18,105 @@ const ratingBadge: Record<string, string> = {
   Skip: "bg-meter-skip/20 text-meter-skip",
 };
 
+interface UserReview {
+  _id: string;
+  movieId: string;
+  user: string;
+  rating: string;
+  text: string;
+  likes: number;
+  createdAt: string;
+}
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("Reviews");
+  const [userReviews, setUserReviews] = useState<UserReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [userTags, setUserTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSignOut = () => {
     signOut();
     navigate("/");
+  };
+
+  // Fetch user reviews
+  useEffect(() => {
+    const fetchUserReviews = async () => {
+      if (!user?.username) return;
+      setReviewsLoading(true);
+      try {
+        const res = await api.get(`/reviews/user/${user.username}`);
+        setUserReviews(res.data);
+      } catch (error) {
+        console.error("Failed to fetch user reviews:", error);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchUserReviews();
+  }, [user?.username]);
+
+  // Load user tags from user data
+  useEffect(() => {
+    if (user && user.tags) {
+      setUserTags(user.tags);
+    }
+  }, [user]);
+
+  const handleAddTag = async (tag: string) => {
+    const trimmedTag = tag.trim();
+    if (!trimmedTag) return;
+    if (userTags.includes(trimmedTag)) {
+      toast({ title: "Tag already added", variant: "destructive" });
+      return;
+    }
+    const updatedTags = [...userTags, trimmedTag];
+    try {
+      await api.put("/auth/tags", { tags: updatedTags });
+      setUserTags(updatedTags);
+      setNewTag("");
+      toast({ title: "Tag added" });
+    } catch (error) {
+      toast({ title: "Failed to add tag", variant: "destructive" });
+    }
+  };
+
+  const handleRemoveTag = async (tag: string) => {
+    const updatedTags = userTags.filter((t) => t !== tag);
+    try {
+      await api.put("/auth/tags", { tags: updatedTags });
+      setUserTags(updatedTags);
+      toast({ title: "Tag removed" });
+    } catch (error) {
+      toast({ title: "Failed to remove tag", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!user) return;
+    try {
+      await api.delete(`/reviews/${reviewId}`, { data: { user: user.username } });
+      setUserReviews((prev) => prev.filter((r) => r._id !== reviewId));
+      toast({ title: "Review deleted", description: "Your review has been removed." });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete review.", variant: "destructive" });
+    }
   };
 
   return (
@@ -58,6 +153,55 @@ const ProfilePage = () => {
               <LogOut size={16} />
             </button>
           </div>
+
+          {/* User Tags */}
+          <div className="mt-6 max-w-md mx-auto">
+            <div className="flex items-center gap-2 mb-3 justify-center">
+              <Tag size={14} className="text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">My Tags</span>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center mb-3">
+              {userTags.map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                  {tag}
+                  <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors" aria-label={`Remove tag ${tag}`}>
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            {/* Default tag suggestions */}
+            <div className="flex flex-wrap gap-1.5 justify-center mb-3">
+              {DEFAULT_TAGS.filter((t) => !userTags.includes(t)).map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleAddTag(tag)}
+                  className="px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-xs hover:text-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+            {/* Custom tag input */}
+            <div className="flex items-center gap-2 justify-center">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(newTag); }}
+                placeholder="Add custom tag..."
+                maxLength={30}
+                className="px-3 py-1.5 rounded-full bg-secondary text-foreground text-xs border border-border focus:outline-none focus:border-primary/50 w-40"
+              />
+              <button
+                onClick={() => handleAddTag(newTag)}
+                className="p-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                aria-label="Add tag"
+              >
+                <Plus size={12} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -80,10 +224,47 @@ const ProfilePage = () => {
 
         {/* Tab content */}
         {activeTab === "Reviews" && (
-          <div className="text-center py-16 text-muted-foreground animate-fade-in">
-            <MessageSquare size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium mb-1">No reviews yet</p>
-            <p className="text-sm">Your reviews will appear here after you rate movies.</p>
+          <div className="animate-fade-in">
+            {reviewsLoading ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <p className="text-sm">Loading reviews...</p>
+              </div>
+            ) : userReviews.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <MessageSquare size={48} className="mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium mb-1">No reviews yet</p>
+                <p className="text-sm">Your reviews will appear here after you rate movies.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userReviews.map((review) => (
+                  <div key={review._id} className="bg-card rounded-xl p-5 border border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <Link to={`/movie/${review.movieId}`} className="text-sm font-medium text-primary hover:underline">
+                          Movie #{review.movieId}
+                        </Link>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingBadge[review.rating] || "bg-secondary"}`}>
+                          {review.rating}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteReview(review._id)}
+                        className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Delete review"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{review.text}</p>
+                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>♥ {review.likes || 0} likes</span>
+                      <span>{formatDate(review.createdAt)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Share2 } from "lucide-react";
+import { ArrowLeft, Share2, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import RatingMeter from "@/components/RatingMeter";
 import ReviewForm from "@/components/ReviewForm";
@@ -22,10 +22,12 @@ const ratingColorMap: Record<string, string> = {
 };
 
 interface Review {
+  _id?: string;
   user: string;
   rating: string;
   text: string;
   likes: number;
+  createdAt?: string;
 }
 
 interface Movie {
@@ -39,6 +41,18 @@ interface Genre {
   name: string;
 }
 
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
@@ -47,6 +61,8 @@ const MovieDetail = () => {
   const [sortBy, setSortBy] = useState("Most Liked");
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const hasUserReviewed = user ? reviews.some((r) => r.user === user.username) : false;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +99,14 @@ const MovieDetail = () => {
       });
       return;
     }
+    if (hasUserReviewed) {
+      toast({
+        title: "Duplicate review",
+        description: "You have already reviewed this movie",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const newReview = {
         movieId: id,
@@ -90,17 +114,35 @@ const MovieDetail = () => {
         rating,
         text,
       };
-      await api.post("/reviews", newReview);
-      setReviews((prevReviews) => [{ ...newReview, likes: 0 }, ...prevReviews]);
+      const res = await api.post("/reviews", newReview);
+      setReviews((prevReviews) => [res.data, ...prevReviews]);
       toast({
         title: "Review posted",
         description: "Thanks for sharing your thoughts!",
       });
-    } catch (error) {
-      console.error("Error submitting review:", error);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Failed to post review. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to post review. Please try again.",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!user) return;
+    try {
+      await api.delete(`/reviews/${reviewId}`, { data: { user: user.username } });
+      setReviews((prevReviews) => prevReviews.filter((r) => r._id !== reviewId));
+      toast({
+        title: "Review deleted",
+        description: "Your review has been removed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete review.",
         variant: "destructive",
       });
     }
@@ -244,23 +286,45 @@ const MovieDetail = () => {
 
           {/* Review Form */}
           <div className="mb-6">
-            <ReviewForm onSubmit={handleReviewSubmit} username={user?.username} />
+            {hasUserReviewed ? (
+              <div className="bg-card rounded-xl p-6 border border-border text-center text-muted-foreground">
+                <p className="text-sm">You have already reviewed this movie.</p>
+              </div>
+            ) : (
+              <ReviewForm onSubmit={handleReviewSubmit} username={user?.username} />
+            )}
           </div>
 
           {/* Reviews List */}
           <div className="space-y-4">
             {reviews.map((review, i) => (
-              <div key={i} className="bg-card rounded-xl p-5 border border-border">
+              <div key={review._id || i} className="bg-card rounded-xl p-5 border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground text-xs font-semibold">
                       {(review.user && review.user[0]) ? review.user[0].toUpperCase() : "?"}
                     </div>
-                    <span className="text-sm font-medium text-foreground">@{review.user}</span>
+                    <div>
+                      <span className="text-sm font-medium text-foreground">@{review.user}</span>
+                      {review.createdAt && (
+                        <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
+                      )}
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingColorMap[review.rating] || "bg-secondary"}`}>
-                    {review.rating}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingColorMap[review.rating] || "bg-secondary"}`}>
+                      {review.rating}
+                    </span>
+                    {user && user.username === review.user && review._id && (
+                      <button
+                        onClick={() => handleDeleteReview(review._id!)}
+                        className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Delete review"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">{review.text}</p>
                 <div className="mt-3 text-xs text-muted-foreground">
