@@ -1,4 +1,4 @@
-import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Plus, Tag } from "lucide-react";
+import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Tag } from "lucide-react";
 import Header from "@/components/Header";
 
 import { useState, useEffect } from "react";
@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 const tabs = ["Reviews", "Watchlist", "Liked"];
 
 const DEFAULT_TAGS = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance", "Thriller", "Documentary"];
+
+const MAX_TAGS = 3;
 
 const ratingBadge: Record<string, string> = {
   Perfection: "bg-accent/20 text-accent",
