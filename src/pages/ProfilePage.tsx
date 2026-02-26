@@ -7,6 +7,8 @@ import movie2 from "@/assets/movie-2.jpg";
 import movie3 from "@/assets/movie-3.jpg";
 import movie5 from "@/assets/movie-5.jpg";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const tabs = ["Reviews", "Watchlist", "Liked"];
 
@@ -35,6 +37,13 @@ const ratingBadge: Record<string, string> = {
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("Reviews");
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -47,14 +56,14 @@ const ProfilePage = () => {
         <div className="text-center mb-10 animate-fade-in">
           <div className="relative inline-block mb-4">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-teal flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-lg">
-              U
+              {user?.username ? user.username[0].toUpperCase() : "G"}
             </div>
             <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary/50 transition-colors">
               <Edit2 size={12} className="text-muted-foreground" />
             </button>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">User</h1>
-          <p className="text-muted-foreground text-sm">@user</p>
+          <h1 className="text-2xl font-bold text-foreground">{user?.username || "Guest"}</h1>
+          <p className="text-muted-foreground text-sm">@{user?.username || "guest"}</p>
 
           <div className="flex items-center justify-center gap-8 mt-6">
             <Stat label="Reviews" value="12" />
@@ -69,7 +78,10 @@ const ProfilePage = () => {
             <button className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all">
               <Settings size={16} />
             </button>
-            <button className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-all">
+            <button
+              onClick={handleSignOut}
+              className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-all"
+            >
               <LogOut size={16} />
             </button>
           </div>

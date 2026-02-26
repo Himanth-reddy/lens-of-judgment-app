@@ -17,6 +17,17 @@ vi.mock("../components/ReviewForm", () => ({
   default: () => <div data-testid="review-form">ReviewForm</div>,
 }));
 
+// Mock AuthContext
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: { username: "TestUser" },
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    signOut: vi.fn(),
+  }),
+}));
+
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
   observe() {}

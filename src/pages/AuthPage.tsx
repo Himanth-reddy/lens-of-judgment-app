@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,7 @@ const AuthPage = () => {
   const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -31,26 +30,17 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await login(email, password);
         toast({ title: "Welcome back!", description: "You've been signed in successfully." });
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { username },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
+        await register(username, email, password);
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: "You've been signed up successfully.",
         });
       }
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.message || error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

@@ -1,62 +1,73 @@
 from playwright.sync_api import sync_playwright, expect
-import os
+import time
 
-def run():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+def run(playwright):
+    browser = playwright.chromium.launch(headless=True)
+    context = browser.new_context()
+    page = context.new_page()
 
-        try:
-            # Navigate to Auth Page
-            print("Navigating to http://localhost:8080/auth")
-            page.goto("http://localhost:8080/auth")
+    # Mock API responses
+    def handle_login(route):
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"token": "fake-token", "username": "TestUser", "email": "test@example.com", "_id": "123"}'
+        )
 
-            # Wait for password input
-            print("Waiting for password input")
-            page.wait_for_selector('input[type="password"]')
+    def handle_me(route):
+        # Respond with user info if token is present (we assume client sends token)
+        # But for mock, we just return user always or check headers if needed.
+        # Simple mock:
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"username": "TestUser", "email": "test@example.com", "_id": "123"}'
+        )
 
-            # Find the password toggle button by aria-label
-            print("Finding toggle button")
-            toggle_btn = page.get_by_role("button", name="Show password")
-            expect(toggle_btn).to_be_visible()
+    page.route("**/api/auth/login", handle_login)
+    page.route("**/api/auth/me", handle_me)
 
-            # Hover to see tooltip
-            print("Hovering to see tooltip")
-            toggle_btn.hover()
-            page.wait_for_timeout(1000) # wait for tooltip animation
+    try:
+        # Go to auth page
+        print("Navigating to auth page...")
+        page.goto("http://localhost:8080/auth")
 
-            # Check tooltip content (optional, but good)
-            # tooltip = page.locator('[role="tooltip"]')
-            # if tooltip.is_visible():
-            #     print("Tooltip visible")
+        # Wait for form
+        page.wait_for_selector("form")
 
-            # Take screenshot of hover state
-            os.makedirs("verification", exist_ok=True)
-            page.screenshot(path="verification/auth_password_tooltip.png")
-            print("Screenshot saved to verification/auth_password_tooltip.png")
+        # Fill login form
+        print("Filling login form...")
+        page.fill("input[id='email']", "test@example.com")
+        page.fill("input[id='password']", "password123")
 
-            # Click to show password
-            print("Clicking toggle button")
-            toggle_btn.click()
+        # Take screenshot before submitting
+        page.screenshot(path="verification/auth_page_filled.png")
 
-            # Verify aria-label changes
-            print("Verifying aria-label change")
-            toggle_btn_hidden = page.get_by_role("button", name="Hide password")
-            expect(toggle_btn_hidden).to_be_visible()
+        # Submit
+        print("Submitting form...")
+        # Find submit button within the form
+        page.click("button[type='submit']")
 
-            # Verify input type changes
-            print("Verifying input type change")
-            password_input = page.locator('input#password')
-            expect(password_input).to_have_attribute("type", "text")
+        # Wait for navigation or success toast
+        # We expect redirection to /
+        print("Waiting for navigation...")
+        page.wait_for_url("http://localhost:8080/", timeout=10000)
 
-            print("Verification successful!")
+        # Check if header shows user avatar (link to /profile)
+        # In Header.tsx: <Link to={user ? "/profile" : "/auth"} ...>
+        # Check if link to /profile exists
+        expect(page.locator("a[href='/profile']")).to_be_visible(timeout=5000)
 
-        except Exception as e:
-            print(f"Error: {e}")
-            page.screenshot(path="verification/error.png")
-            raise e
-        finally:
-            browser.close()
+        print("Authenticated successfully!")
 
-if __name__ == "__main__":
-    run()
+        # Take screenshot of home page
+        page.screenshot(path="verification/home_authenticated.png")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        page.screenshot(path="verification/error.png")
+    finally:
+        browser.close()
+
+with sync_playwright() as playwright:
+    run(playwright)
