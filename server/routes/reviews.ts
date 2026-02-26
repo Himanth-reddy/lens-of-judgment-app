@@ -160,7 +160,7 @@ router.delete("/:reviewId", async (req, res) => {
       return res.status(403).json({ message: "Not authorized to delete this review" });
     }
 
-    await Review.findByIdAndDelete(req.params.reviewId);
+    await review.deleteOne();
     res.json({ message: "Review deleted" });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

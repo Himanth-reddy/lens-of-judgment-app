@@ -21,6 +21,15 @@ const ratingColorMap: Record<string, string> = {
   Skip: "bg-meter-skip text-foreground",
 };
 
+const ratingColorValues: Record<string, string> = {
+  Skip: "hsl(var(--meter-skip))",
+  Timepass: "hsl(var(--meter-timepass))",
+  "Go for it": "hsl(var(--meter-goforit))",
+  Perfection: "hsl(var(--meter-perfection))",
+};
+
+const ratingLabels = ["Skip", "Timepass", "Go for it", "Perfection"];
+
 interface Review {
   _id?: string;
   user: string;
@@ -227,6 +236,28 @@ const MovieDetail = () => {
     return sorted;
   }, [reviews, sortBy]);
 
+  const { breakdown, totalVotes, dominantFeeling, dominantPercentage } = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of reviews) {
+      counts[r.rating] = (counts[r.rating] || 0) + 1;
+    }
+    const total = reviews.length;
+    const bd = ratingLabels.map((label) => ({
+      label,
+      value: total > 0 ? Math.round(((counts[label] || 0) / total) * 100) : 0,
+      color: ratingColorValues[label],
+    }));
+    const dominant = bd.length > 0
+      ? bd.reduce((max, item) => (item.value > max.value ? item : max), bd[0])
+      : null;
+    return {
+      breakdown: bd,
+      totalVotes: total,
+      dominantFeeling: total > 0 && dominant ? dominant.label : "",
+      dominantPercentage: total > 0 && dominant ? dominant.value : 0,
+    };
+  }, [reviews]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -275,27 +306,6 @@ const MovieDetail = () => {
       </div>
     );
   }
-
-  const ratingLabels = ["Skip", "Timepass", "Go for it", "Perfection"];
-
-  const breakdown = ratingLabels.map((label) => {
-    const count = reviews.filter((r) => r.rating === label).length;
-    const percentage = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
-    const colorMap: Record<string, string> = {
-      Skip: "hsl(var(--meter-skip))",
-      Timepass: "hsl(var(--meter-timepass))",
-      "Go for it": "hsl(var(--meter-goforit))",
-      Perfection: "hsl(var(--meter-perfection))",
-    };
-    return { label, value: percentage, color: colorMap[label] };
-  });
-
-  const totalVotes = reviews.length;
-  const dominant = breakdown.length > 0
-    ? breakdown.reduce((max, item) => (item.value > max.value ? item : max), breakdown[0])
-    : null;
-  const dominantFeeling = totalVotes > 0 && dominant ? dominant.label : "";
-  const dominantPercentage = totalVotes > 0 && dominant ? dominant.value : 0;
 
   return (
     <div className="min-h-screen bg-background">

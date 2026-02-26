@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import axios from "axios";
-import { getPopularMovies } from "./tmdb.js";
+import { getPopularMovies, getTrendingMovies } from "./tmdb.js";
 
 vi.mock("axios");
 
@@ -25,5 +25,20 @@ describe("tmdb service", () => {
     // Second call - should use cache
     await getPopularMovies();
     expect(mockGet).toHaveBeenCalledTimes(1);
+  });
+
+  it("getTrendingMovies caches the result", async () => {
+    const fakeResults = [{ id: 1, title: "Trending Movie", poster_path: null }];
+    mockGet.mockResolvedValue({ data: { results: fakeResults } });
+
+    // First call - should hit API
+    const first = await getTrendingMovies();
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(first).toEqual(fakeResults);
+
+    // Second call - should use cache and return the same data
+    const second = await getTrendingMovies();
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(second).toEqual(fakeResults);
   });
 });
