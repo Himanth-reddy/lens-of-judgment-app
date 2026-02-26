@@ -18,9 +18,9 @@ const Header = () => {
         <nav className="flex items-center gap-1 md:gap-2">
           <div className="hidden md:flex items-center gap-1">
             <NavItem to="/" label="Explore" active={path === "/"} icon={<Compass size={18} />} />
-            <NavItem to="/bookmarks" active={path === "/bookmarks"} icon={<Bookmark size={18} />} />
-            <NavItem to="/community" active={path === "/community"} icon={<Users size={18} />} />
-            <NavItem to="/categories" active={path === "/categories"} icon={<LayoutGrid size={18} />} />
+            <NavItem to="/bookmarks" label="Bookmarks" active={path === "/bookmarks"} icon={<Bookmark size={18} />} />
+            <NavItem to="/community" label="Discussion" active={path === "/community"} icon={<Users size={18} />} />
+            <NavItem to="/categories" label="Categories" active={path === "/categories"} icon={<LayoutGrid size={18} />} />
           </div>
 
           <div className="flex items-center gap-2">
@@ -49,12 +49,20 @@ const Header = () => {
 const NavItem = ({ to, label, active, icon }: { to: string; label?: string; active: boolean; icon: React.ReactNode }) => (
   <Link
     to={to}
-    className={`relative flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+    className={`relative flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
       active ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
     }`}
   >
     {icon}
-    {label && <span className="hidden lg:inline">{label}</span>}
+    {label && (
+      <span
+        className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${
+          active ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"
+        }`}
+      >
+        {label}
+      </span>
+    )}
     {active && (
       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
     )}

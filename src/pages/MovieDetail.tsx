@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Share2, Trash2, Pencil, Check, X } from "lucide-react";
+import { ArrowLeft, Share2, Trash2, Pencil, Check, X, Heart } from "lucide-react";
 import Header from "@/components/Header";
 import RatingMeter from "@/components/RatingMeter";
 import ReviewForm from "@/components/ReviewForm";
@@ -27,6 +27,7 @@ interface Review {
   rating: string;
   text: string;
   likes: number;
+  likedBy?: string[];
   createdAt?: string;
 }
 
@@ -191,6 +192,41 @@ const MovieDetail = () => {
     }
   };
 
+  const handleLikeReview = async (reviewId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to like a review",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await api.post(`/reviews/${reviewId}/like`, { user: user.username });
+      setReviews((prevReviews) =>
+        prevReviews.map((r) =>
+          r._id === reviewId ? { ...r, likes: res.data.likes, likedBy: res.data.likedBy } : r
+        )
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to like review.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const sortedReviews = useMemo(() => {
+    const sorted = [...reviews];
+    if (sortBy === "Most Liked") {
+      sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    } else if (sortBy === "Latest") {
+      sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    }
+    return sorted;
+  }, [reviews, sortBy]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -340,7 +376,7 @@ const MovieDetail = () => {
 
           {/* Reviews List */}
           <div className="space-y-4">
-            {reviews.map((review, i) => (
+            {sortedReviews.map((review, i) => (
               <div key={review._id || i} className="bg-card rounded-xl p-5 border border-border">
                 {editingReviewId === review._id ? (
                   /* Edit mode */
@@ -432,8 +468,22 @@ const MovieDetail = () => {
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">{review.text}</p>
-                    <div className="mt-3 text-xs text-muted-foreground">
-                      ♥ {review.likes || 0} likes
+                    <div className="mt-3 flex items-center gap-1">
+                      <button
+                        onClick={() => review._id && handleLikeReview(review._id)}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                        aria-label="Like review"
+                      >
+                        <Heart
+                          size={14}
+                          className={
+                            user && review.likedBy?.includes(user.username)
+                              ? "fill-primary text-primary"
+                              : ""
+                          }
+                        />
+                        {review.likes || 0} likes
+                      </button>
                     </div>
                   </>
                 )}

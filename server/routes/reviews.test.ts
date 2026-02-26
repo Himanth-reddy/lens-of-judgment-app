@@ -295,4 +295,55 @@ describe('Review Routes Security', () => {
     const data = await response.json();
     expect(data.message).toBe('Invalid rating value');
   });
+
+  it('should return 404 when liking a non-existent review', async () => {
+    const response = await fetch(`${baseUrl}/nonexistent123/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.message).toBe('Review not found');
+  });
+
+  it('should reject like without user', async () => {
+    const response = await fetch(`${baseUrl}/review123/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('User is required');
+  });
+
+  it('should allow user to like a review', async () => {
+    const { Review } = await import('../models/Review.js');
+    const saveFn = vi.fn().mockResolvedValue({
+      _id: 'review123',
+      user: 'author',
+      movieId: '123',
+      likes: 1,
+      likedBy: ['testuser'],
+    });
+    (Review as any).findById.mockResolvedValueOnce({
+      _id: 'review123',
+      user: 'author',
+      movieId: '123',
+      likes: 0,
+      likedBy: [],
+      save: saveFn,
+    });
+
+    const response = await fetch(`${baseUrl}/review123/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(200);
+  });
 });

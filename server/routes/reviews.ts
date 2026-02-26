@@ -112,6 +112,36 @@ router.put("/:reviewId", async (req, res) => {
   }
 });
 
+// Like/unlike a review
+router.post("/:reviewId/like", async (req, res) => {
+  const { user } = req.body;
+
+  if (!user || typeof user !== "string") {
+    return res.status(400).json({ message: "User is required" });
+  }
+
+  try {
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    const likedBy: string[] = (review as any).likedBy || [];
+    const index = likedBy.indexOf(user);
+    if (index === -1) {
+      likedBy.push(user);
+    } else {
+      likedBy.splice(index, 1);
+    }
+    (review as any).likedBy = likedBy;
+    review.likes = likedBy.length;
+    const updatedReview = await review.save();
+    res.json(updatedReview);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 // Delete a review
 router.delete("/:reviewId", async (req, res) => {
   const { user } = req.body;
