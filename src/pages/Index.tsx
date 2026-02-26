@@ -37,7 +37,8 @@ const Index = () => {
           date: "Release Date", // TMDB data has release_date but let's keep it simple
           status: "Released",
           interested: Math.floor(Math.random() * 1000),
-          image: m.image
+          image: m.image,
+          id: m.id,
         })));
       } catch (error) {
         console.error("Failed to fetch movies", error);

@@ -14,6 +14,14 @@ vi.mock('../models/Review.js', () => {
   (ReviewMock as any).find = vi.fn().mockReturnValue({
     sort: vi.fn().mockResolvedValue([]),
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ReviewMock as any).findOne = vi.fn().mockResolvedValue(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ReviewMock as any).findById = vi.fn().mockResolvedValue(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ReviewMock as any).findByIdAndDelete = vi.fn().mockResolvedValue(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ReviewMock as any).findByIdAndUpdate = vi.fn().mockResolvedValue(null);
   return { Review: ReviewMock };
 });
 
@@ -141,5 +149,206 @@ describe('Review Routes Security', () => {
     });
 
     expect(response.status).toBe(201);
+  });
+
+  it('should reject duplicate reviews from the same user for the same movie', async () => {
+    const { Review } = await import('../models/Review.js');
+    // Mock findOne to return an existing review
+    (Review as any).findOne.mockResolvedValueOnce({ _id: 'existing', movieId: '123', user: 'testuser' });
+
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        movieId: '123',
+        user: 'testuser',
+        rating: 'Go for it',
+        text: 'Duplicate review',
+      }),
+    });
+
+    expect(response.status).toBe(409);
+    const data = await response.json();
+    expect(data.message).toBe('You have already reviewed this movie');
+  });
+
+  it('should return 404 when deleting a non-existent review', async () => {
+    const response = await fetch(`${baseUrl}/nonexistent123`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.message).toBe('Review not found');
+  });
+
+  it('should reject delete without user', async () => {
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('User is required');
+  });
+
+  it('should reject delete by non-owner', async () => {
+    const { Review } = await import('../models/Review.js');
+    (Review as any).findById.mockResolvedValueOnce({ _id: 'review123', user: 'originaluser', movieId: '123' });
+
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'differentuser' }),
+    });
+
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data.message).toBe('Not authorized to delete this review');
+  });
+
+  it('should return 404 when editing a non-existent review', async () => {
+    const response = await fetch(`${baseUrl}/nonexistent123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser', rating: 'Skip', text: 'Updated text' }),
+    });
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.message).toBe('Review not found');
+  });
+
+  it('should reject edit without required fields', async () => {
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('Rating and text are required');
+  });
+
+  it('should reject edit by non-owner', async () => {
+    const { Review } = await import('../models/Review.js');
+    (Review as any).findById.mockResolvedValueOnce({
+      _id: 'review123',
+      user: 'originaluser',
+      movieId: '123',
+      rating: 'Skip',
+      text: 'Original text',
+      save: vi.fn().mockResolvedValue({ _id: 'review123', user: 'originaluser', rating: 'Skip', text: 'Original text' }),
+    });
+
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'differentuser', rating: 'Perfection', text: 'Hacked text' }),
+    });
+
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data.message).toBe('Not authorized to edit this review');
+  });
+
+  it('should allow owner to edit their review', async () => {
+    const { Review } = await import('../models/Review.js');
+    const saveFn = vi.fn().mockResolvedValue({
+      _id: 'review123',
+      user: 'testuser',
+      movieId: '123',
+      rating: 'Perfection',
+      text: 'Updated review text',
+    });
+    (Review as any).findById.mockResolvedValueOnce({
+      _id: 'review123',
+      user: 'testuser',
+      movieId: '123',
+      rating: 'Skip',
+      text: 'Original text',
+      save: saveFn,
+    });
+
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser', rating: 'Perfection', text: 'Updated review text' }),
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('should reject edit with invalid rating', async () => {
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser', rating: 'InvalidRating', text: 'Some text' }),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('Invalid rating value');
+  });
+
+  it('should return 404 when liking a non-existent review', async () => {
+    const response = await fetch(`${baseUrl}/nonexistent123/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.message).toBe('Review not found');
+  });
+
+  it('should reject like without user', async () => {
+    const response = await fetch(`${baseUrl}/review123/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('User is required');
+  });
+
+  it('should allow user to like a review', async () => {
+    const { Review } = await import('../models/Review.js');
+    const mockData: Record<string, any> = {
+      _id: 'review123',
+      user: 'author',
+      movieId: '123',
+      likes: 0,
+      likedBy: [],
+    };
+    const saveFn = vi.fn().mockResolvedValue({
+      _id: 'review123',
+      user: 'author',
+      movieId: '123',
+      likes: 1,
+      likedBy: ['testuser'],
+    });
+    (Review as any).findById.mockResolvedValueOnce({
+      ...mockData,
+      get: (key: string) => mockData[key],
+      set: (key: string, value: any) => { mockData[key] = value; },
+      save: saveFn,
+    });
+
+    const response = await fetch(`${baseUrl}/review123/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(200);
   });
 });

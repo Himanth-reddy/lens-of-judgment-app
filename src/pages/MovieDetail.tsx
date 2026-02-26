@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Share2 } from "lucide-react";
+import { ArrowLeft, Share2, Trash2, Pencil, Check, X, Heart } from "lucide-react";
 import Header from "@/components/Header";
 import RatingMeter from "@/components/RatingMeter";
 import ReviewForm from "@/components/ReviewForm";
@@ -22,10 +22,13 @@ const ratingColorMap: Record<string, string> = {
 };
 
 interface Review {
+  _id?: string;
   user: string;
   rating: string;
   text: string;
   likes: number;
+  likedBy?: string[];
+  createdAt?: string;
 }
 
 interface Movie {
@@ -39,14 +42,33 @@ interface Genre {
   name: string;
 }
 
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+type Rating = "Skip" | "Timepass" | "Go for it" | "Perfection";
+
 const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("Most Liked");
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editRating, setEditRating] = useState<Rating>("Skip");
+  const [editText, setEditText] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const hasUserReviewed = user ? reviews.some((r) => r.user === user.username) : false;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +105,14 @@ const MovieDetail = () => {
       });
       return;
     }
+    if (hasUserReviewed) {
+      toast({
+        title: "Duplicate review",
+        description: "You have already reviewed this movie",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const newReview = {
         movieId: id,
@@ -90,21 +120,112 @@ const MovieDetail = () => {
         rating,
         text,
       };
-      await api.post("/reviews", newReview);
-      setReviews((prevReviews) => [{ ...newReview, likes: 0 }, ...prevReviews]);
+      const res = await api.post("/reviews", newReview);
+      setReviews((prevReviews) => [res.data, ...prevReviews]);
       toast({
         title: "Review posted",
         description: "Thanks for sharing your thoughts!",
       });
-    } catch (error) {
-      console.error("Error submitting review:", error);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Failed to post review. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to post review. Please try again.",
+        description: message,
         variant: "destructive",
       });
     }
   };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!user) return;
+    try {
+      await api.delete(`/reviews/${reviewId}`, { data: { user: user.username } });
+      setReviews((prevReviews) => prevReviews.filter((r) => r._id !== reviewId));
+      toast({
+        title: "Review deleted",
+        description: "Your review has been removed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete review.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startEditReview = (review: Review) => {
+    if (!review._id) return;
+    setEditingReviewId(review._id);
+    setEditRating(review.rating as Rating);
+    setEditText(review.text);
+  };
+
+  const cancelEditReview = () => {
+    setEditingReviewId(null);
+    setEditRating("Skip");
+    setEditText("");
+  };
+
+  const handleEditReview = async (reviewId: string) => {
+    if (!user) return;
+    try {
+      const res = await api.put(`/reviews/${reviewId}`, {
+        user: user.username,
+        rating: editRating,
+        text: editText,
+      });
+      setReviews((prevReviews) =>
+        prevReviews.map((r) => (r._id === reviewId ? { ...r, rating: res.data.rating, text: res.data.text } : r))
+      );
+      setEditingReviewId(null);
+      toast({
+        title: "Review updated",
+        description: "Your review has been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update review.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLikeReview = async (reviewId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to like a review",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await api.post(`/reviews/${reviewId}/like`, { user: user.username });
+      setReviews((prevReviews) =>
+        prevReviews.map((r) =>
+          r._id === reviewId ? { ...r, likes: res.data.likes, likedBy: res.data.likedBy } : r
+        )
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to like review.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const sortedReviews = useMemo(() => {
+    const sorted = [...reviews];
+    if (sortBy === "Most Liked") {
+      sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    } else if (sortBy === "Latest") {
+      sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    }
+    return sorted;
+  }, [reviews, sortBy]);
 
   if (loading) {
     return (
@@ -244,28 +365,128 @@ const MovieDetail = () => {
 
           {/* Review Form */}
           <div className="mb-6">
-            <ReviewForm onSubmit={handleReviewSubmit} username={user?.username} />
+            {hasUserReviewed ? (
+              <div className="bg-card rounded-xl p-6 border border-border text-center text-muted-foreground">
+                <p className="text-sm">You have already reviewed this movie.</p>
+              </div>
+            ) : (
+              <ReviewForm onSubmit={handleReviewSubmit} username={user?.username} />
+            )}
           </div>
 
           {/* Reviews List */}
           <div className="space-y-4">
-            {reviews.map((review, i) => (
-              <div key={i} className="bg-card rounded-xl p-5 border border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground text-xs font-semibold">
-                      {(review.user && review.user[0]) ? review.user[0].toUpperCase() : "?"}
+            {sortedReviews.map((review, i) => (
+              <div key={review._id || i} className="bg-card rounded-xl p-5 border border-border">
+                {editingReviewId === review._id ? (
+                  /* Edit mode */
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground text-xs font-semibold">
+                          {(review.user && review.user[0]) ? review.user[0].toUpperCase() : "?"}
+                        </div>
+                        <span className="text-sm font-medium text-foreground">@{review.user}</span>
+                      </div>
+                      <button
+                        onClick={cancelEditReview}
+                        className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                        aria-label="Cancel edit"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
-                    <span className="text-sm font-medium text-foreground">@{review.user}</span>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {(["Skip", "Timepass", "Go for it", "Perfection"] as Rating[]).map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => setEditRating(r)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${
+                            editRating === r
+                              ? ratingColorMap[r] || "bg-secondary"
+                              : "bg-secondary text-muted-foreground border-transparent hover:text-foreground"
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      maxLength={1000}
+                      className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-2 min-h-[60px] text-sm"
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-muted-foreground">{editText.length}/1000</span>
+                      <button
+                        onClick={() => review._id && handleEditReview(review._id)}
+                        disabled={!editRating || !editText.trim()}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                      >
+                        <Check size={12} /> Save
+                      </button>
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingColorMap[review.rating] || "bg-secondary"}`}>
-                    {review.rating}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">{review.text}</p>
-                <div className="mt-3 text-xs text-muted-foreground">
-                  ♥ {review.likes || 0} likes
-                </div>
+                ) : (
+                  /* View mode */
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground text-xs font-semibold">
+                          {(review.user && review.user[0]) ? review.user[0].toUpperCase() : "?"}
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-foreground">@{review.user}</span>
+                          {review.createdAt && (
+                            <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${ratingColorMap[review.rating] || "bg-secondary"}`}>
+                          {review.rating}
+                        </span>
+                        {user && user.username === review.user && review._id && (
+                          <>
+                            <button
+                              onClick={() => startEditReview(review)}
+                              className="p-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                              aria-label="Edit review"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => review._id && handleDeleteReview(review._id)}
+                              className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              aria-label="Delete review"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{review.text}</p>
+                    <div className="mt-3 flex items-center gap-1">
+                      <button
+                        onClick={() => review._id && handleLikeReview(review._id)}
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                        aria-label="Like review"
+                      >
+                        <Heart
+                          size={14}
+                          className={
+                            user && review.likedBy?.includes(user.username)
+                              ? "fill-primary text-primary"
+                              : ""
+                          }
+                        />
+                        {review.likes || 0} likes
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
