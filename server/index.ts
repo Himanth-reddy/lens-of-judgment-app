@@ -22,7 +22,12 @@ connectDB().then((success) => {
   }
 });
 
-getJwtSecret();
+try {
+  getJwtSecret();
+} catch (error) {
+  console.error("Failed to initialize JWT secret:", error);
+  process.exit(1);
+}
 
 const app = express();
 
