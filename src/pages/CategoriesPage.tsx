@@ -60,6 +60,8 @@ const CategoriesPage = () => {
             rating: m.vote_average,
           }));
           setMovies(mapped);
+        } else {
+          setMovies([]);
         }
       } catch (error) {
         console.error("Error fetching movies:", error);

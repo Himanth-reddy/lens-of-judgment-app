@@ -17,7 +17,8 @@ const SearchPage = () => {
     if (stored) {
       try {
         setRecentSearches(JSON.parse(stored));
-      } catch {
+      } catch (e) {
+        console.error("Error parsing recent searches from localStorage:", e);
         setRecentSearches([]);
       }
     }
@@ -71,7 +72,7 @@ const SearchPage = () => {
           rating: m.vote_average,
         }));
         setResults(movies);
-        if (query.trim()) {
+        if (query.trim() && movies.length > 0) {
           addRecentSearch(query.trim());
         }
       } catch (error: any) {

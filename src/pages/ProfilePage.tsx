@@ -1,4 +1,4 @@
-import { User, Settings, Star, MessageSquare, Bookmark, Heart, LogOut, Edit2, Film } from "lucide-react";
+import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2 } from "lucide-react";
 import Header from "@/components/Header";
 
 import { useState } from "react";
