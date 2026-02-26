@@ -20,6 +20,8 @@ vi.mock('../models/Review.js', () => {
   (ReviewMock as any).findById = vi.fn().mockResolvedValue(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (ReviewMock as any).findByIdAndDelete = vi.fn().mockResolvedValue(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ReviewMock as any).findByIdAndUpdate = vi.fn().mockResolvedValue(null);
   return { Review: ReviewMock };
 });
 
@@ -207,5 +209,90 @@ describe('Review Routes Security', () => {
     expect(response.status).toBe(403);
     const data = await response.json();
     expect(data.message).toBe('Not authorized to delete this review');
+  });
+
+  it('should return 404 when editing a non-existent review', async () => {
+    const response = await fetch(`${baseUrl}/nonexistent123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser', rating: 'Skip', text: 'Updated text' }),
+    });
+
+    expect(response.status).toBe(404);
+    const data = await response.json();
+    expect(data.message).toBe('Review not found');
+  });
+
+  it('should reject edit without required fields', async () => {
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser' }),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('Rating and text are required');
+  });
+
+  it('should reject edit by non-owner', async () => {
+    const { Review } = await import('../models/Review.js');
+    (Review as any).findById.mockResolvedValueOnce({
+      _id: 'review123',
+      user: 'originaluser',
+      movieId: '123',
+      rating: 'Skip',
+      text: 'Original text',
+      save: vi.fn().mockResolvedValue({ _id: 'review123', user: 'originaluser', rating: 'Skip', text: 'Original text' }),
+    });
+
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'differentuser', rating: 'Perfection', text: 'Hacked text' }),
+    });
+
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data.message).toBe('Not authorized to edit this review');
+  });
+
+  it('should allow owner to edit their review', async () => {
+    const { Review } = await import('../models/Review.js');
+    const saveFn = vi.fn().mockResolvedValue({
+      _id: 'review123',
+      user: 'testuser',
+      movieId: '123',
+      rating: 'Perfection',
+      text: 'Updated review text',
+    });
+    (Review as any).findById.mockResolvedValueOnce({
+      _id: 'review123',
+      user: 'testuser',
+      movieId: '123',
+      rating: 'Skip',
+      text: 'Original text',
+      save: saveFn,
+    });
+
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser', rating: 'Perfection', text: 'Updated review text' }),
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('should reject edit with invalid rating', async () => {
+    const response = await fetch(`${baseUrl}/review123`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: 'testuser', rating: 'InvalidRating', text: 'Some text' }),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('Invalid rating value');
   });
 });

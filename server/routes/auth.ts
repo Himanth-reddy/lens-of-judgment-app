@@ -88,8 +88,8 @@ router.put("/tags", protect, async (req: AuthRequest, res) => {
     return res.status(400).json({ message: "Tags must be an array" });
   }
 
-  if (tags.length > 20) {
-    return res.status(400).json({ message: "Maximum 20 tags allowed" });
+  if (tags.length > 3) {
+    return res.status(400).json({ message: "Maximum 3 tags allowed" });
   }
 
   for (const tag of tags) {

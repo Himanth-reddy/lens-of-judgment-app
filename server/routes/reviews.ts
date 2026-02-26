@@ -68,6 +68,50 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Edit a review
+router.put("/:reviewId", async (req, res) => {
+  const { user, rating, text } = req.body;
+
+  if (!user || typeof user !== "string") {
+    return res.status(400).json({ message: "User is required" });
+  }
+
+  if (!rating || !text) {
+    return res.status(400).json({ message: "Rating and text are required" });
+  }
+
+  if (typeof rating !== "string" || typeof text !== "string") {
+    return res.status(400).json({ message: "Invalid input types" });
+  }
+
+  if (text.length > 1000) {
+    return res.status(400).json({ message: "Review text exceeds 1000 characters" });
+  }
+
+  const validRatings = ["Skip", "Timepass", "Go for it", "Perfection"];
+  if (!validRatings.includes(rating)) {
+    return res.status(400).json({ message: "Invalid rating value" });
+  }
+
+  try {
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    if (review.user !== user) {
+      return res.status(403).json({ message: "Not authorized to edit this review" });
+    }
+
+    review.rating = rating;
+    review.text = text;
+    const updatedReview = await review.save();
+    res.json(updatedReview);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 // Delete a review
 router.delete("/:reviewId", async (req, res) => {
   const { user } = req.body;
