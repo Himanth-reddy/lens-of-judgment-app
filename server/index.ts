@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { connectDB } from "./config/db.js";
+import { getJwtSecret } from "./config/auth.js";
 import movieRoutes from "./routes/movies.js";
 import reviewRoutes from "./routes/reviews.js";
 import authRoutes from "./routes/auth.js";
@@ -10,6 +11,7 @@ import authRoutes from "./routes/auth.js";
 dotenv.config();
 
 connectDB();
+getJwtSecret();
 
 const app = express();
 
