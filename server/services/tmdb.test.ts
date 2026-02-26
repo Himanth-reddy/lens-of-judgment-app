@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import axios from "axios";
-import { getPopularMovies } from "./tmdb";
+import { getPopularMovies } from "./tmdb.js";
 
 vi.mock("axios");
 
