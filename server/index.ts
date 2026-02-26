@@ -2,14 +2,32 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
+import { getJwtSecret } from "./config/auth.js";
 import movieRoutes from "./routes/movies.js";
 import reviewRoutes from "./routes/reviews.js";
 import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
-connectDB();
+// Initialize application state
+let dbConnected = false;
+
+// Attempt to connect to DB, but don't crash if it fails
+connectDB().then((success) => {
+  dbConnected = success;
+  if (!success) {
+    console.warn("WARNING: Database connection failed. Application running in limited mode.");
+  }
+});
+
+try {
+  getJwtSecret();
+} catch (error) {
+  console.error("Failed to initialize JWT secret:", error);
+  process.exit(1);
+}
 
 const app = express();
 
@@ -21,6 +39,32 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Health Check Endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: dbConnected ? "healthy" : "degraded",
+    database: dbConnected ? "connected" : "disconnected",
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Database Middleware - Check connection before handling DB-dependent routes
+app.use("/api", (req, res, next) => {
+  if (!dbConnected && mongoose.connection.readyState !== 1) {
+     // Try to reconnect if not connected
+     if (mongoose.connection.readyState === 0) {
+        connectDB().then(success => {
+            dbConnected = success;
+            if (success) next();
+            else res.status(503).json({ message: "Service Unavailable: Database connection failed", error: "Please check MONGO_URI configuration" });
+        });
+        return;
+     }
+     return res.status(503).json({ message: "Service Unavailable: Database connection failed", error: "Please check MONGO_URI configuration" });
+  }
+  next();
+});
 
 // API Routes
 app.use("/api/movies", movieRoutes);

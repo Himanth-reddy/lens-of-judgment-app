@@ -2,11 +2,12 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { User, IUser } from "../models/User.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { getJwtSecret } from "../config/auth.js";
 
 const router = express.Router();
 
 const generateToken = (id: string) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "fallback_secret", {
+  return jwt.sign({ id }, getJwtSecret(), {
     expiresIn: "30d",
   });
 };
