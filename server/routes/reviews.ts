@@ -103,7 +103,7 @@ router.put("/:reviewId", async (req, res) => {
       return res.status(403).json({ message: "Not authorized to edit this review" });
     }
 
-    review.rating = rating;
+    review.rating = rating as "Skip" | "Timepass" | "Go for it" | "Perfection";
     review.text = text;
     const updatedReview = await review.save();
     res.json(updatedReview);
