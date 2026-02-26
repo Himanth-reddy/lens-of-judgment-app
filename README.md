@@ -1,73 +1,152 @@
-# Welcome to your Lovable project
+# Lens of Judgment
 
-## Project info
+A full-stack movie review and rating platform where users can rate, review, and share their opinions on movies using a unique 4-tier rating system.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **4-Tier Rating System** — Rate movies as Skip 👎, Timepass 😐, Go for it 👍, or Perfection 🤩
+- **Movie Discovery** — Browse popular, trending, and genre-based movie listings powered by TMDB
+- **Search** — Find movies by title
+- **Reviews** — Write reviews (up to 1000 characters), like other reviews, and view community feedback
+- **User Profiles** — Register, log in, and manage your profile with personalized tags
+- **Bookmarks** — Save movies to watch later
+- **Community** — See top reviewers and community discussions
+- **Notifications** — Stay updated with alerts
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+### Frontend
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- React 18 with TypeScript
+- Vite
+- Tailwind CSS
+- shadcn-ui (Radix UI primitives)
+- React Router
+- React Query
+- React Hook Form + Zod
+- Recharts
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
 
-**Use your preferred IDE**
+- Express 5 with TypeScript
+- MongoDB / Mongoose
+- JWT authentication
+- bcryptjs password hashing
+- Express Rate Limit
+- TMDB API integration
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Project Structure
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+├── src/                  # Frontend source
+│   ├── pages/            # Page components (Home, Search, Profile, etc.)
+│   ├── components/       # UI components
+│   ├── contexts/         # React contexts (Auth)
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # API client and utilities
+│   └── main.tsx          # Entry point
+├── server/               # Backend source
+│   ├── routes/           # API routes (auth, movies, reviews)
+│   ├── models/           # Mongoose models (User, Review)
+│   ├── services/         # TMDB service
+│   ├── middleware/        # Auth and rate limiting
+│   ├── config/           # Database and JWT configuration
+│   └── index.ts          # Express server entry point
+└── public/               # Static assets
 ```
 
-**Edit a file directly in GitHub**
+## Getting Started
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Prerequisites
 
-**Use GitHub Codespaces**
+- [Node.js](https://nodejs.org/) (v18 or later recommended)
+- npm
+- A [MongoDB](https://www.mongodb.com/) instance
+- A [TMDB API key](https://www.themoviedb.org/documentation/api)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Setup
 
-## What technologies are used for this project?
+1. Clone the repository:
 
-This project is built with:
+   ```sh
+   git clone https://github.com/Himanth-reddy/lens-of-judgment-app.git
+   cd lens-of-judgment-app
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. Install dependencies:
 
-## How can I deploy this project?
+   ```sh
+   npm install
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+3. Create a `.env` file in the project root (see `.env.example`):
 
-## Can I connect a custom domain to my Lovable project?
+   ```env
+   MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/db
+   TMDB_API_KEY=your_tmdb_api_key_here
+   JWT_SECRET=your_jwt_secret_here
+   PORT=5000
+   CORS_ORIGIN=http://localhost:8080
+   ```
 
-Yes, you can!
+4. Start the backend server:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+   ```sh
+   npm run server
+   ```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+5. In a separate terminal, start the frontend dev server:
+
+   ```sh
+   npm run dev
+   ```
+
+   The frontend runs at `http://localhost:8080` and proxies API requests to the backend on port 5000.
+
+## Scripts
+
+| Command           | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `npm run dev`     | Start the Vite development server                |
+| `npm run server`  | Start the Express backend server                 |
+| `npm run build`   | Build the frontend and compile the server        |
+| `npm start`       | Run the production server                        |
+| `npm run lint`    | Run ESLint                                       |
+| `npm test`        | Run tests with Vitest                            |
+
+## API Endpoints
+
+### Auth
+
+| Method | Endpoint             | Description               |
+| ------ | -------------------- | ------------------------- |
+| POST   | `/api/auth/register` | Register a new user       |
+| POST   | `/api/auth/login`    | Log in                    |
+| GET    | `/api/auth/me`       | Get the current user      |
+| PUT    | `/api/auth/tags`     | Update user tags          |
+
+### Movies
+
+| Method | Endpoint                 | Description                  |
+| ------ | ------------------------ | ---------------------------- |
+| GET    | `/api/movies/popular`    | Get popular movies           |
+| GET    | `/api/movies/trending`   | Get trending movies          |
+| GET    | `/api/movies/genres`     | Get available genres         |
+| GET    | `/api/movies/discover`   | Discover movies by genre     |
+| GET    | `/api/movies/search`     | Search movies                |
+| GET    | `/api/movies/:id`        | Get movie details            |
+
+### Reviews
+
+| Method | Endpoint                        | Description                  |
+| ------ | ------------------------------- | ---------------------------- |
+| GET    | `/api/reviews/:movieId`         | Get reviews for a movie      |
+| GET    | `/api/reviews/user/:username`   | Get a user's reviews         |
+| POST   | `/api/reviews`                  | Create a review              |
+| PUT    | `/api/reviews/:reviewId`        | Edit a review                |
+| POST   | `/api/reviews/:reviewId/like`   | Like or unlike a review      |
+| DELETE | `/api/reviews/:reviewId`        | Delete a review              |
+
+## License
+
+This project is private.
