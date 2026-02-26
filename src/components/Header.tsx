@@ -2,6 +2,7 @@ import { Search, Bookmark, Bell, Users, LayoutGrid, User, Compass } from "lucide
 import LOJLogo from "./LOJLogo";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Header = () => {
   const location = useLocation();
@@ -24,21 +25,29 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <NavItem to="/search" active={path === "/search"} icon={<Search size={18} />} />
-            <NavItem to="/notifications" active={path === "/notifications"} icon={<Bell size={18} />} />
+            <NavItem to="/search" active={path === "/search"} icon={<Search size={18} />} title="Search" />
+            <NavItem to="/notifications" active={path === "/notifications"} icon={<Bell size={18} />} title="Notifications" />
 
-            <Link
-              to={user ? "/profile" : "/auth"}
-              className={`ml-2 w-9 h-9 rounded-full bg-gradient-to-br ${user ? "from-primary to-accent" : "from-secondary to-secondary/80"} flex items-center justify-center border border-border hover:border-primary/50 transition-all duration-300 shadow-sm`}
-            >
-              {user ? (
-                <span className="text-primary-foreground font-semibold text-xs">
-                  {user.username ? user.username[0].toUpperCase() : "U"}
-                </span>
-              ) : (
-                <User size={16} className="text-muted-foreground" />
-              )}
-            </Link>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to={user ? "/profile" : "/auth"}
+                  aria-label={user ? "Profile" : "Login"}
+                  className={`ml-2 w-9 h-9 rounded-full bg-gradient-to-br ${user ? "from-primary to-accent" : "from-secondary to-secondary/80"} flex items-center justify-center border border-border hover:border-primary/50 transition-all duration-300 shadow-sm`}
+                >
+                  {user ? (
+                    <span className="text-primary-foreground font-semibold text-xs">
+                      {user.username ? user.username[0].toUpperCase() : "U"}
+                    </span>
+                  ) : (
+                    <User size={16} className="text-muted-foreground" />
+                  )}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{user ? "Profile" : "Login"}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </nav>
       </div>
@@ -46,27 +55,51 @@ const Header = () => {
   );
 };
 
-const NavItem = ({ to, label, active, icon }: { to: string; label?: string; active: boolean; icon: React.ReactNode }) => (
-  <Link
-    to={to}
-    className={`relative flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-      active ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-    }`}
-  >
-    {icon}
-    {label && (
-      <span
-        className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${
-          active ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0"
-        }`}
-      >
-        {label}
-      </span>
-    )}
-    {active && (
-      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
-    )}
-  </Link>
-);
+const NavItem = ({
+  to,
+  label,
+  active,
+  icon,
+  title,
+}: {
+  to: string;
+  label?: string;
+  active: boolean;
+  icon: React.ReactNode;
+  title?: string;
+}) => {
+  const displayTitle = title || label;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Link
+          to={to}
+          aria-label={displayTitle}
+          className={`relative flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+            active ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+          }`}
+        >
+          {icon}
+          {label && (
+            <span
+              className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${
+                active ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0"
+              }`}
+            >
+              {label}
+            </span>
+          )}
+          {active && (
+            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
+          )}
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{displayTitle}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+};
 
 export default Header;
