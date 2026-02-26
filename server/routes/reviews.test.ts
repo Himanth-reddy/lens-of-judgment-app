@@ -322,6 +322,13 @@ describe('Review Routes Security', () => {
 
   it('should allow user to like a review', async () => {
     const { Review } = await import('../models/Review.js');
+    const mockData: Record<string, any> = {
+      _id: 'review123',
+      user: 'author',
+      movieId: '123',
+      likes: 0,
+      likedBy: [],
+    };
     const saveFn = vi.fn().mockResolvedValue({
       _id: 'review123',
       user: 'author',
@@ -330,11 +337,9 @@ describe('Review Routes Security', () => {
       likedBy: ['testuser'],
     });
     (Review as any).findById.mockResolvedValueOnce({
-      _id: 'review123',
-      user: 'author',
-      movieId: '123',
-      likes: 0,
-      likedBy: [],
+      ...mockData,
+      get: (key: string) => mockData[key],
+      set: (key: string, value: any) => { mockData[key] = value; },
       save: saveFn,
     });
 

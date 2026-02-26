@@ -57,7 +57,7 @@ const NavItem = ({ to, label, active, icon }: { to: string; label?: string; acti
     {label && (
       <span
         className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${
-          active ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"
+          active ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0"
         }`}
       >
         {label}

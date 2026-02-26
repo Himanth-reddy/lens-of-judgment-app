@@ -126,14 +126,14 @@ router.post("/:reviewId/like", async (req, res) => {
       return res.status(404).json({ message: "Review not found" });
     }
 
-    const likedBy: string[] = (review as any).likedBy || [];
+    const likedBy: string[] = review.get("likedBy") || [];
     const index = likedBy.indexOf(user);
     if (index === -1) {
       likedBy.push(user);
     } else {
       likedBy.splice(index, 1);
     }
-    (review as any).likedBy = likedBy;
+    review.set("likedBy", likedBy);
     review.likes = likedBy.length;
     const updatedReview = await review.save();
     res.json(updatedReview);
