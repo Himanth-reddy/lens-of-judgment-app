@@ -1,5 +1,6 @@
 import express from "express";
 import { Review } from "../models/Review.js";
+import { reviewWriteRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get("/user/:username", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", reviewWriteRateLimiter, async (req, res) => {
   const { movieId, user, rating, text } = req.body;
 
   if (!movieId || !user || !rating || !text) {
@@ -69,7 +70,7 @@ router.post("/", async (req, res) => {
 });
 
 // Edit a review
-router.put("/:reviewId", async (req, res) => {
+router.put("/:reviewId", reviewWriteRateLimiter, async (req, res) => {
   const { user, rating, text } = req.body;
 
   if (!user || typeof user !== "string") {
@@ -113,7 +114,7 @@ router.put("/:reviewId", async (req, res) => {
 });
 
 // Like/unlike a review
-router.post("/:reviewId/like", async (req, res) => {
+router.post("/:reviewId/like", reviewWriteRateLimiter, async (req, res) => {
   const { user } = req.body;
 
   if (!user || typeof user !== "string") {
@@ -143,7 +144,7 @@ router.post("/:reviewId/like", async (req, res) => {
 });
 
 // Delete a review
-router.delete("/:reviewId", async (req, res) => {
+router.delete("/:reviewId", reviewWriteRateLimiter, async (req, res) => {
   const { user } = req.body;
 
   if (!user || typeof user !== "string") {
