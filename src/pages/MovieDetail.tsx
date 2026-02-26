@@ -11,6 +11,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const ratingColorMap: Record<string, string> = {
   Perfection: "bg-accent text-accent-foreground",
@@ -43,6 +45,8 @@ const MovieDetail = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("Most Liked");
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,17 +75,34 @@ const MovieDetail = () => {
 
   const handleReviewSubmit = async (rating: string, text: string) => {
     if (!id) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to post a review",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const newReview = {
         movieId: id,
-        user: "You", // Hardcoded user for now
+        user: user.username,
         rating,
         text,
       };
       await api.post("/reviews", newReview);
       setReviews((prevReviews) => [{ ...newReview, likes: 0 }, ...prevReviews]);
+      toast({
+        title: "Review posted",
+        description: "Thanks for sharing your thoughts!",
+      });
     } catch (error) {
       console.error("Error submitting review:", error);
+      toast({
+        title: "Error",
+        description: "Failed to post review. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

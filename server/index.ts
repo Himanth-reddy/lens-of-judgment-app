@@ -5,6 +5,7 @@ import path from "path";
 import { connectDB } from "./config/db.js";
 import movieRoutes from "./routes/movies.js";
 import reviewRoutes from "./routes/reviews.js";
+import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(express.json());
 // API Routes
 app.use("/api/movies", movieRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/auth", authRoutes);
 
 // Serve Static Files in Production
 const __dirname = path.resolve();
