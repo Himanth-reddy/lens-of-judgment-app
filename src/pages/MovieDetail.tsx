@@ -170,9 +170,11 @@ const MovieDetail = () => {
   });
 
   const totalVotes = reviews.length;
-  const dominant = breakdown.reduce((max, item) => (item.value > max.value ? item : max), breakdown[0]);
-  const dominantFeeling = totalVotes > 0 ? dominant.label : "";
-  const dominantPercentage = totalVotes > 0 ? dominant.value : 0;
+  const dominant = breakdown.length > 0
+    ? breakdown.reduce((max, item) => (item.value > max.value ? item : max), breakdown[0])
+    : null;
+  const dominantFeeling = totalVotes > 0 && dominant ? dominant.label : "";
+  const dominantPercentage = totalVotes > 0 && dominant ? dominant.value : 0;
 
   return (
     <div className="min-h-screen bg-background">

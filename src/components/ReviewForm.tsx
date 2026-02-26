@@ -28,8 +28,8 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
     Perfection: "bg-accent text-accent-foreground border-accent",
   };
 
-  const displayName = username || "user";
-  const initial = displayName[0]?.toUpperCase() || "U";
+  const displayName = username || "Guest";
+  const initial = displayName[0]?.toUpperCase() || "G";
 
   return (
     <div className="bg-card rounded-xl p-6 border border-border">
