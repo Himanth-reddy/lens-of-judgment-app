@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -171,21 +170,19 @@ const MovieDetail = () => {
         <section className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">LOJ Meter</h2>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
-                    aria-label="Share this movie"
-                  >
-                    <Share2 size={18} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Share this movie</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
+                  aria-label="Share this movie"
+                >
+                  <Share2 size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Share this movie</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <RatingMeter percentage={83} votes={2243} totalVotes={2707} breakdown={breakdown} />
         </section>

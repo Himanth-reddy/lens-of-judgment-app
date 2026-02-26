@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, type Mock } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import MovieDetail from "../pages/MovieDetail";
 import api from "../lib/api";
 
@@ -40,11 +41,13 @@ describe("MovieDetail", () => {
     (api.get as Mock).mockImplementation(() => new Promise(() => {}));
 
     render(
-      <MemoryRouter initialEntries={["/movies/1"]}>
-        <Routes>
-          <Route path="/movies/:id" element={<MovieDetail />} />
-        </Routes>
-      </MemoryRouter>
+      <TooltipProvider>
+        <MemoryRouter initialEntries={["/movies/1"]}>
+          <Routes>
+            <Route path="/movies/:id" element={<MovieDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </TooltipProvider>
     );
 
     // Initial state check: "Loading..." should NOT be present anymore
@@ -73,11 +76,13 @@ describe("MovieDetail", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/movies/1"]}>
-        <Routes>
-          <Route path="/movies/:id" element={<MovieDetail />} />
-        </Routes>
-      </MemoryRouter>
+      <TooltipProvider>
+        <MemoryRouter initialEntries={["/movies/1"]}>
+          <Routes>
+            <Route path="/movies/:id" element={<MovieDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </TooltipProvider>
     );
 
     // Wait for content to load
