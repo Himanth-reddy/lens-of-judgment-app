@@ -170,10 +170,9 @@ const MovieDetail = () => {
   });
 
   const totalVotes = reviews.length;
-  const perfectionVotes = reviews.filter((r) => r.rating === "Perfection").length;
-  const goForItVotes = reviews.filter((r) => r.rating === "Go for it").length;
-  const positiveVotes = perfectionVotes + goForItVotes;
-  const percentage = totalVotes > 0 ? Math.round((positiveVotes / totalVotes) * 100) : 0;
+  const dominant = breakdown.reduce((max, item) => (item.value > max.value ? item : max), breakdown[0]);
+  const dominantFeeling = totalVotes > 0 ? dominant.label : "";
+  const dominantPercentage = totalVotes > 0 ? dominant.value : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -218,7 +217,7 @@ const MovieDetail = () => {
               </TooltipContent>
             </Tooltip>
           </div>
-          <RatingMeter percentage={percentage} votes={positiveVotes} totalVotes={totalVotes} breakdown={breakdown} />
+          <RatingMeter dominantFeeling={dominantFeeling} dominantPercentage={dominantPercentage} totalVotes={totalVotes} breakdown={breakdown} />
         </section>
 
         {/* Divider */}
@@ -243,7 +242,7 @@ const MovieDetail = () => {
 
           {/* Review Form */}
           <div className="mb-6">
-            <ReviewForm onSubmit={handleReviewSubmit} />
+            <ReviewForm onSubmit={handleReviewSubmit} username={user?.username} />
           </div>
 
           {/* Reviews List */}

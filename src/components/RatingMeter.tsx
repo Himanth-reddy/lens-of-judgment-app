@@ -1,16 +1,12 @@
-import { useMemo } from "react";
-
 interface RatingMeterProps {
-  percentage: number;
-  votes: number;
+  dominantFeeling: string;
+  dominantPercentage: number;
   totalVotes: number;
   breakdown: { label: string; value: number; color: string }[];
 }
 
-const RatingMeter = ({ percentage, votes, totalVotes, breakdown }: RatingMeterProps) => {
-  const circumference = 2 * Math.PI * 80;
-  const halfCircumference = circumference / 2;
-  const strokeDashoffset = halfCircumference - (halfCircumference * percentage) / 100;
+const RatingMeter = ({ dominantFeeling, dominantPercentage, totalVotes, breakdown }: RatingMeterProps) => {
+  const dominantColor = breakdown.find((b) => b.label === dominantFeeling)?.color || "hsl(var(--accent))";
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -26,6 +22,7 @@ const RatingMeter = ({ percentage, votes, totalVotes, breakdown }: RatingMeterPr
           />
           {/* Colored arcs based on breakdown */}
           {breakdown.map((item, i) => {
+            if (item.value === 0) return null;
             const startAngle = breakdown.slice(0, i).reduce((acc, b) => acc + b.value, 0);
             const endAngle = startAngle + item.value;
             const startRad = (Math.PI * (180 - startAngle * 1.8)) / 180;
@@ -34,12 +31,11 @@ const RatingMeter = ({ percentage, votes, totalVotes, breakdown }: RatingMeterPr
             const y1 = 100 - 80 * Math.sin(startRad);
             const x2 = 100 + 80 * Math.cos(endRad);
             const y2 = 100 - 80 * Math.sin(endRad);
-            const largeArc = item.value > 50 ? 1 : 0;
 
             return (
               <path
                 key={item.label}
-                d={`M ${x1} ${y1} A 80 80 0 ${largeArc} 0 ${x2} ${y2}`}
+                d={`M ${x1} ${y1} A 80 80 0 0 1 ${x2} ${y2}`}
                 fill="none"
                 stroke={item.color}
                 strokeWidth="16"
@@ -48,12 +44,12 @@ const RatingMeter = ({ percentage, votes, totalVotes, breakdown }: RatingMeterPr
               />
             );
           })}
-          {/* Center text */}
-          <text x="100" y="75" textAnchor="middle" className="fill-accent font-display text-4xl" fontSize="36">
-            {percentage}%
+          {/* Center text — dominant feeling */}
+          <text x="100" y="70" textAnchor="middle" className="font-display" fontSize="22" fill={dominantColor}>
+            {dominantFeeling || "No Votes"}
           </text>
           <text x="100" y="98" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
-            {votes}/{totalVotes} Votes
+            {totalVotes > 0 ? `${dominantPercentage}% · ${totalVotes} vote${totalVotes !== 1 ? "s" : ""}` : "Be the first to rate"}
           </text>
         </svg>
       </div>
