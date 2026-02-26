@@ -5,6 +5,12 @@ import Header from "@/components/Header";
 import RatingMeter from "@/components/RatingMeter";
 import ReviewForm from "@/components/ReviewForm";
 import api from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ratingColorMap: Record<string, string> = {
   Perfection: "bg-accent text-accent-foreground",
@@ -20,9 +26,20 @@ interface Review {
   likes: number;
 }
 
+interface Movie {
+  title: string;
+  image: string;
+  genre: string;
+  year: string;
+}
+
+interface Genre {
+  name: string;
+}
+
 const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [movie, setMovie] = useState<any>(null);
+  const [movie, setMovie] = useState<Movie | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("Most Liked");
@@ -36,7 +53,7 @@ const MovieDetail = () => {
         setMovie({
           title: movieRes.data.title,
           image: movieRes.data.poster_path ? `https://image.tmdb.org/t/p/w500${movieRes.data.poster_path}` : "https://placehold.co/200x300?text=No+Image",
-          genre: movieRes.data.genres?.map((g: any) => g.name).join(", ") || "Unknown",
+          genre: movieRes.data.genres?.map((g: Genre) => g.name).join(", ") || "Unknown",
           year: movieRes.data.release_date?.split("-")[0] || "Unknown",
         });
 
@@ -69,12 +86,38 @@ const MovieDetail = () => {
   };
 
   if (loading) {
-     return (
+    return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-20 text-center">
-          <p className="text-foreground">Loading...</p>
-        </div>
+        <main className="container py-8 max-w-3xl mx-auto">
+          {/* Skeleton Header */}
+          <div className="flex gap-6 mb-8">
+            <Skeleton className="w-40 h-60 rounded-lg" />
+            <div className="flex-1 space-y-4 py-4">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-4 w-1/3" />
+            </div>
+          </div>
+
+          {/* Skeleton Meter */}
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-6">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </section>
+
+          <Skeleton className="h-px w-full my-8" />
+
+          {/* Skeleton Reviews */}
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-40 mb-6" />
+            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -107,7 +150,11 @@ const MovieDetail = () => {
         <div className="flex gap-6 mb-8">
           <img src={movie.image} alt={movie.title} className="w-40 h-60 object-cover rounded-lg shadow-lg" />
           <div className="flex-1">
-            <Link to="/" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm mb-3">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm mb-3"
+              aria-label="Go back"
+            >
               <ArrowLeft size={14} /> Back
             </Link>
             <h1 className="text-3xl font-bold text-foreground mb-2">{movie.title}</h1>
@@ -123,9 +170,19 @@ const MovieDetail = () => {
         <section className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">LOJ Meter</h2>
-            <button className="text-muted-foreground hover:text-foreground">
-              <Share2 size={18} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
+                  aria-label="Share this movie"
+                >
+                  <Share2 size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Share this movie</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <RatingMeter percentage={83} votes={2243} totalVotes={2707} breakdown={breakdown} />
         </section>
@@ -141,6 +198,7 @@ const MovieDetail = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort reviews by"
                 className="bg-secondary text-foreground text-sm rounded-md px-3 py-1.5 border border-border"
               >
                 <option>Most Liked</option>
