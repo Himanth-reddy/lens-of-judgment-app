@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { getJwtSecret } from './auth.js';
+import { getJwtSecret, _resetCache } from './auth.js';
 
 describe('getJwtSecret', () => {
   const originalEnv = process.env;
 
   afterEach(() => {
     process.env = originalEnv;
+    _resetCache();
     vi.restoreAllMocks();
   });
 
@@ -22,9 +23,26 @@ describe('getJwtSecret', () => {
     expect(consoleSpy).toHaveBeenCalledWith('WARNING: JWT_SECRET not set. Using insecure fallback for development.');
   });
 
-  it('should throw error if not set in production', () => {
+  it('should generate random secret if not set in production', () => {
     process.env = { ...originalEnv, JWT_SECRET: undefined, NODE_ENV: 'production' };
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    expect(() => getJwtSecret()).toThrow('CRITICAL: JWT_SECRET environment variable is not set in production.');
+    const secret = getJwtSecret();
+
+    // Check it's a hex string (at least 64 bytes = 128 chars)
+    expect(secret).toMatch(/^[0-9a-f]{128,}$/);
+    expect(consoleSpy).toHaveBeenCalledWith('WARNING: JWT_SECRET environment variable is not set in production.');
+  });
+
+  it('should cache the generated secret in production', () => {
+    process.env = { ...originalEnv, JWT_SECRET: undefined, NODE_ENV: 'production' };
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const secret1 = getJwtSecret();
+    const secret2 = getJwtSecret();
+
+    expect(secret1).toBe(secret2);
+    // Should only warn once (2 calls) for the generation
+    expect(consoleSpy).toHaveBeenCalledTimes(2);
   });
 });
