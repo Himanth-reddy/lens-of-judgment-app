@@ -4,6 +4,7 @@ import MovieCard from "@/components/MovieCard";
 
 import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
+import { getTMDBImage } from "@/lib/tmdb";
 
 interface Genre {
   id: number;
@@ -55,9 +56,7 @@ const CategoriesPage = () => {
           const mapped = response.data.map((m: any) => ({
             id: m.id.toString(),
             title: m.title,
-            image: m.poster_path
-              ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
-              : "https://placehold.co/200x300?text=No+Image",
+            image: getTMDBImage(m.poster_path, "w342"),
             tag: active === "All" ? "Popular" : active,
             rating: m.vote_average,
           }));
