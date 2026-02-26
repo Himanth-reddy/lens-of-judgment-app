@@ -4,14 +4,47 @@ import MovieCard from "@/components/MovieCard";
 import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
 
-const trendingSearches = ["Shadow Protocol", "Neon Uprising", "Best Thrillers 2026", "Sci-Fi Movies", "Animated Films"];
-const recentSearches = ["The Hollow", "Blood Money", "Romance movies"];
-
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [trendingMovies, setTrendingMovies] = useState<any[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("recentSearches");
+    if (stored) {
+      try {
+        setRecentSearches(JSON.parse(stored));
+      } catch (e) {
+        console.error("Error parsing recent searches from localStorage:", e);
+        setRecentSearches([]);
+      }
+    }
+
+    const fetchTrending = async () => {
+      try {
+        const response = await api.get("/movies/trending");
+        setTrendingMovies(response.data.slice(0, 5));
+      } catch (error) {
+        console.error("Error fetching trending:", error);
+      }
+    };
+    fetchTrending();
+  }, []);
+
+  const addRecentSearch = (term: string) => {
+    const updated = [term, ...recentSearches.filter((s) => s !== term)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem("recentSearches", JSON.stringify(updated));
+  };
+
+  const clearRecentSearch = (term: string) => {
+    const updated = recentSearches.filter((s) => s !== term);
+    setRecentSearches(updated);
+    localStorage.setItem("recentSearches", JSON.stringify(updated));
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -36,8 +69,12 @@ const SearchPage = () => {
           title: m.title,
           image: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : "https://placehold.co/200x300?text=No+Image",
           tag: "Result",
+          rating: m.vote_average,
         }));
         setResults(movies);
+        if (query.trim() && movies.length > 0) {
+          addRecentSearch(query.trim());
+        }
       } catch (error: any) {
         if (error.name !== 'CanceledError') {
              console.error("Error searching movies:", error);
@@ -114,37 +151,46 @@ const SearchPage = () => {
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Trending</h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                {trendingSearches.map((s) => (
+                {trendingMovies.map((m: any) => (
                   <button
-                    key={s}
-                    onClick={() => setQuery(s)}
+                    key={m.id}
+                    onClick={() => setQuery(m.title)}
                     className="px-4 py-2 rounded-full bg-card border border-border text-sm text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-200"
                   >
-                    {s}
+                    {m.title}
                   </button>
                 ))}
               </div>
             </section>
 
             {/* Recent */}
-            <section className="animate-slide-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
-              <div className="flex items-center gap-2 mb-4">
-                <Clock size={16} className="text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Recent Searches</h2>
-              </div>
-              <div className="space-y-1">
-                {recentSearches.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setQuery(s)}
-                    className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-card transition-all duration-200 text-left"
-                  >
-                    <Clock size={14} className="opacity-40" />
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </section>
+            {recentSearches.length > 0 && (
+              <section className="animate-slide-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock size={16} className="text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Recent Searches</h2>
+                </div>
+                <div className="space-y-1">
+                  {recentSearches.map((s) => (
+                    <div key={s} className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-card transition-all duration-200">
+                      <button
+                        onClick={() => setQuery(s)}
+                        className="flex items-center gap-3 flex-1 text-left"
+                      >
+                        <Clock size={14} className="opacity-40" />
+                        {s}
+                      </button>
+                      <button
+                        onClick={() => clearRecentSearch(s)}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
       </main>

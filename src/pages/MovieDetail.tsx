@@ -155,12 +155,26 @@ const MovieDetail = () => {
     );
   }
 
-  const breakdown = [
-    { label: "Skip", value: 0, color: "hsl(var(--meter-skip))" },
-    { label: "Timepass", value: 1, color: "hsl(var(--meter-timepass))" },
-    { label: "Go for it", value: 16, color: "hsl(var(--meter-goforit))" },
-    { label: "Perfection", value: 83, color: "hsl(var(--meter-perfection))" },
-  ];
+  const ratingLabels = ["Skip", "Timepass", "Go for it", "Perfection"];
+
+  const breakdown = ratingLabels.map((label) => {
+    const count = reviews.filter((r) => r.rating === label).length;
+    const percentage = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+    const colorMap: Record<string, string> = {
+      Skip: "hsl(var(--meter-skip))",
+      Timepass: "hsl(var(--meter-timepass))",
+      "Go for it": "hsl(var(--meter-goforit))",
+      Perfection: "hsl(var(--meter-perfection))",
+    };
+    return { label, value: percentage, color: colorMap[label] };
+  });
+
+  const totalVotes = reviews.length;
+  const dominant = breakdown.length > 0
+    ? breakdown.reduce((max, item) => (item.value > max.value ? item : max), breakdown[0])
+    : null;
+  const dominantFeeling = totalVotes > 0 && dominant ? dominant.label : "";
+  const dominantPercentage = totalVotes > 0 && dominant ? dominant.value : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -205,7 +219,7 @@ const MovieDetail = () => {
               </TooltipContent>
             </Tooltip>
           </div>
-          <RatingMeter percentage={83} votes={2243} totalVotes={2707} breakdown={breakdown} />
+          <RatingMeter dominantFeeling={dominantFeeling} dominantPercentage={dominantPercentage} totalVotes={totalVotes} breakdown={breakdown} />
         </section>
 
         {/* Divider */}
@@ -230,7 +244,7 @@ const MovieDetail = () => {
 
           {/* Review Form */}
           <div className="mb-6">
-            <ReviewForm onSubmit={handleReviewSubmit} />
+            <ReviewForm onSubmit={handleReviewSubmit} username={user?.username} />
           </div>
 
           {/* Reviews List */}
