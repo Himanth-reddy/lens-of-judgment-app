@@ -317,7 +317,7 @@ const MovieDetail = () => {
                     </span>
                     {user && user.username === review.user && review._id && (
                       <button
-                        onClick={() => handleDeleteReview(review._id!)}
+                        onClick={() => review._id && handleDeleteReview(review._id)}
                         className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         aria-label="Delete review"
                       >
