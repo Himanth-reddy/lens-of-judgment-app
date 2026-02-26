@@ -66,3 +66,50 @@ export const getMovieDetails = async (id: string) => {
     throw error;
   }
 };
+
+interface Genre {
+  id: number;
+  name: string;
+}
+
+let genresCache: Genre[] | null = null;
+let genresFetchTime = 0;
+
+export const getGenres = async () => {
+  const now = Date.now();
+  if (genresCache && now - genresFetchTime < CACHE_DURATION) {
+    return genresCache;
+  }
+
+  try {
+    const response = await getClient().get("/genre/movie/list");
+    genresCache = response.data.genres;
+    genresFetchTime = now;
+    return genresCache;
+  } catch (error) {
+    console.error("Error fetching genres:", error);
+    throw error;
+  }
+};
+
+export const discoverMoviesByGenre = async (genreId: string) => {
+  try {
+    const response = await getClient().get("/discover/movie", {
+      params: { with_genres: genreId, sort_by: "popularity.desc" },
+    });
+    return response.data.results;
+  } catch (error) {
+    console.error("Error discovering movies:", error);
+    throw error;
+  }
+};
+
+export const getTrendingMovies = async () => {
+  try {
+    const response = await getClient().get("/trending/movie/week");
+    return response.data.results;
+  } catch (error) {
+    console.error("Error fetching trending movies:", error);
+    throw error;
+  }
+};

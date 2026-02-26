@@ -10,6 +10,7 @@ interface Movie {
   title: string;
   image: string;
   tag: string;
+  rating?: number;
 }
 
 const Index = () => {
@@ -25,6 +26,7 @@ const Index = () => {
           title: m.title,
           image: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : "https://placehold.co/200x300?text=No+Image",
           tag: "Popular",
+          rating: m.vote_average,
         }));
         setMovies(popularMovies);
 
