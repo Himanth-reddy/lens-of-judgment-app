@@ -2,17 +2,21 @@ import axios from "axios";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+let tmdbClient: ReturnType<typeof axios.create> | null = null;
+
 const getClient = () => {
+  if (tmdbClient) return tmdbClient;
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
     throw new Error("TMDB_API_KEY is not set. TMDB calls will fail.");
   }
-  return axios.create({
+  tmdbClient = axios.create({
     baseURL: TMDB_BASE_URL,
     params: {
       api_key: apiKey,
     },
   });
+  return tmdbClient;
 };
 
 interface Movie {
@@ -104,10 +108,20 @@ export const discoverMoviesByGenre = async (genreId: string) => {
   }
 };
 
+let trendingMoviesCache: Movie[] | null = null;
+let trendingFetchTime = 0;
+
 export const getTrendingMovies = async () => {
+  const now = Date.now();
+  if (trendingMoviesCache && now - trendingFetchTime < CACHE_DURATION) {
+    return trendingMoviesCache;
+  }
+
   try {
     const response = await getClient().get("/trending/movie/week");
-    return response.data.results;
+    trendingMoviesCache = response.data.results;
+    trendingFetchTime = now;
+    return trendingMoviesCache;
   } catch (error) {
     console.error("Error fetching trending movies:", error);
     throw error;

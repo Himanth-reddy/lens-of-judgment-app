@@ -4,6 +4,7 @@ import { User, IUser } from "../models/User.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { getJwtSecret } from "../config/auth.js";
 import type { AuthRequest } from "../middleware/authMiddleware.js";
+import { authRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const generateToken = (id: string) => {
   });
 };
 
-router.post("/register", async (req, res) => {
+router.post("/register", authRateLimiter, async (req, res) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -45,7 +46,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", authRateLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {

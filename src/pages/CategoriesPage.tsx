@@ -2,7 +2,7 @@ import { LayoutGrid, Film } from "lucide-react";
 import Header from "@/components/Header";
 import MovieCard from "@/components/MovieCard";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
 
 interface Genre {
@@ -23,11 +23,13 @@ const CategoriesPage = () => {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const genresRef = useRef<Genre[]>([]);
 
   useEffect(() => {
     const fetchGenres = async () => {
       try {
         const response = await api.get("/movies/genres");
+        genresRef.current = response.data;
         setGenres(response.data);
       } catch (error) {
         console.error("Error fetching genres:", error);
@@ -44,7 +46,7 @@ const CategoriesPage = () => {
         if (active === "All") {
           response = await api.get("/movies/popular");
         } else {
-          const genre = genres.find((g) => g.name === active);
+          const genre = genresRef.current.find((g) => g.name === active);
           if (genre) {
             response = await api.get("/movies/discover", { params: { genre: genre.id } });
           }
@@ -70,7 +72,7 @@ const CategoriesPage = () => {
       }
     };
     fetchMovies();
-  }, [active, genres]);
+  }, [active]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
