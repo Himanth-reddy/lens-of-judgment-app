@@ -25,12 +25,29 @@ vi.mock('../models/Review.js', () => {
   return { Review: ReviewMock };
 });
 
+// Mock Auth Middleware
+vi.mock('../middleware/authMiddleware.js', () => ({
+  protect: (req: any, res: any, next: any) => {
+    // If headers.authorization is set to "Bearer valid_token", simulate logged in user
+    if (req.headers.authorization === 'Bearer valid_token') {
+      req.user = { username: 'testuser', _id: 'user123' };
+      next();
+    } else if (req.headers.authorization === 'Bearer other_token') {
+      req.user = { username: 'otheruser', _id: 'user456' };
+      next();
+    } else {
+      res.status(401).json({ message: 'Not authorized' });
+    }
+  }
+}));
+
 const app = express();
 app.use(express.json());
 app.use('/api/reviews', reviewRoutes);
 
 let server: Server;
 let baseUrl: string;
+const authHeader = { 'Authorization': 'Bearer valid_token' };
 
 describe('Review Routes Security', () => {
   beforeEach(async () => {
@@ -49,14 +66,26 @@ describe('Review Routes Security', () => {
     });
   });
 
-  it('should reject reviews with text longer than 1000 characters', async () => {
-    const longText = 'a'.repeat(1001);
+  it('should reject unauthenticated requests', async () => {
     const response = await fetch(baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         movieId: '123',
-        user: 'testuser',
+        rating: 'Go for it',
+        text: 'Valid text',
+      }),
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it('should reject reviews with text longer than 1000 characters', async () => {
+    const longText = 'a'.repeat(1001);
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({
+        movieId: '123',
         rating: 'Go for it',
         text: longText,
       }),
@@ -67,32 +96,13 @@ describe('Review Routes Security', () => {
     expect(data.message).toBe('Review text exceeds 1000 characters');
   });
 
-  it('should reject user names longer than 50 characters', async () => {
-    const longUser = 'u'.repeat(51);
-    const response = await fetch(baseUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        movieId: '123',
-        user: longUser,
-        rating: 'Go for it',
-        text: 'Valid text',
-      }),
-    });
-
-    expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data.message).toBe('User name exceeds 50 characters');
-  });
-
   it('should allow movie IDs up to 50 characters', async () => {
     const longId = 'a'.repeat(50);
     const response = await fetch(baseUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         movieId: longId,
-        user: 'validuser',
         rating: 'Go for it',
         text: 'Valid text',
       }),
@@ -105,10 +115,9 @@ describe('Review Routes Security', () => {
     const longId = 'a'.repeat(51);
     const response = await fetch(baseUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         movieId: longId,
-        user: 'validuser',
         rating: 'Go for it',
         text: 'Valid text',
       }),
@@ -122,10 +131,9 @@ describe('Review Routes Security', () => {
   it('should reject non-string inputs', async () => {
     const response = await fetch(baseUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         movieId: '123',
-        user: 'validuser',
         rating: 'Go for it',
         text: 12345, // Invalid type
       }),
@@ -139,10 +147,9 @@ describe('Review Routes Security', () => {
   it('should allow valid reviews', async () => {
      const response = await fetch(baseUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         movieId: '123',
-        user: 'validuser',
         rating: 'Go for it',
         text: 'Valid text',
       }),
@@ -158,10 +165,9 @@ describe('Review Routes Security', () => {
 
     const response = await fetch(baseUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         movieId: '123',
-        user: 'testuser',
         rating: 'Go for it',
         text: 'Duplicate review',
       }),
@@ -175,8 +181,8 @@ describe('Review Routes Security', () => {
   it('should return 404 when deleting a non-existent review', async () => {
     const response = await fetch(`${baseUrl}/nonexistent123`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({}),
     });
 
     expect(response.status).toBe(404);
@@ -184,26 +190,15 @@ describe('Review Routes Security', () => {
     expect(data.message).toBe('Review not found');
   });
 
-  it('should reject delete without user', async () => {
-    const response = await fetch(`${baseUrl}/review123`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
-
-    expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data.message).toBe('User is required');
-  });
-
   it('should reject delete by non-owner', async () => {
     const { Review } = await import('../models/Review.js');
+    // Review owned by 'originaluser', but we are logged in as 'testuser'
     (Review as any).findById.mockResolvedValueOnce({ _id: 'review123', user: 'originaluser', movieId: '123' });
 
     const response = await fetch(`${baseUrl}/review123`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'differentuser' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({}),
     });
 
     expect(response.status).toBe(403);
@@ -214,8 +209,8 @@ describe('Review Routes Security', () => {
   it('should return 404 when editing a non-existent review', async () => {
     const response = await fetch(`${baseUrl}/nonexistent123`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser', rating: 'Skip', text: 'Updated text' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ rating: 'Skip', text: 'Updated text' }),
     });
 
     expect(response.status).toBe(404);
@@ -226,8 +221,8 @@ describe('Review Routes Security', () => {
   it('should reject edit without required fields', async () => {
     const response = await fetch(`${baseUrl}/review123`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({}), // Missing fields
     });
 
     expect(response.status).toBe(400);
@@ -248,8 +243,8 @@ describe('Review Routes Security', () => {
 
     const response = await fetch(`${baseUrl}/review123`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'differentuser', rating: 'Perfection', text: 'Hacked text' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ rating: 'Perfection', text: 'Hacked text' }),
     });
 
     expect(response.status).toBe(403);
@@ -277,8 +272,8 @@ describe('Review Routes Security', () => {
 
     const response = await fetch(`${baseUrl}/review123`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser', rating: 'Perfection', text: 'Updated review text' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ rating: 'Perfection', text: 'Updated review text' }),
     });
 
     expect(response.status).toBe(200);
@@ -287,8 +282,8 @@ describe('Review Routes Security', () => {
   it('should reject edit with invalid rating', async () => {
     const response = await fetch(`${baseUrl}/review123`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser', rating: 'InvalidRating', text: 'Some text' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ rating: 'InvalidRating', text: 'Some text' }),
     });
 
     expect(response.status).toBe(400);
@@ -299,25 +294,13 @@ describe('Review Routes Security', () => {
   it('should return 404 when liking a non-existent review', async () => {
     const response = await fetch(`${baseUrl}/nonexistent123/like`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({}),
     });
 
     expect(response.status).toBe(404);
     const data = await response.json();
     expect(data.message).toBe('Review not found');
-  });
-
-  it('should reject like without user', async () => {
-    const response = await fetch(`${baseUrl}/review123/like`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
-
-    expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data.message).toBe('User is required');
   });
 
   it('should allow user to like a review', async () => {
@@ -345,8 +328,8 @@ describe('Review Routes Security', () => {
 
     const response = await fetch(`${baseUrl}/review123/like`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: 'testuser' }),
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({}),
     });
 
     expect(response.status).toBe(200);
