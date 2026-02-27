@@ -58,9 +58,30 @@ export const searchMovies = async (query: string) => {
   }
 };
 
+// Cache for movie details
+const movieDetailsCache = new Map<string, { data: any; timestamp: number }>();
+const MOVIE_DETAILS_CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+
 export const getMovieDetails = async (id: string) => {
+  const now = Date.now();
+  const cached = movieDetailsCache.get(id);
+
+  if (cached && now - cached.timestamp < MOVIE_DETAILS_CACHE_DURATION) {
+    return cached.data;
+  }
+
   try {
     const response = await getClient().get(`/movie/${id}`);
+    movieDetailsCache.set(id, { data: response.data, timestamp: now });
+
+    // Simple cleanup if cache gets too large (optional but good practice)
+    if (movieDetailsCache.size > 1000) {
+      const oldestKey = movieDetailsCache.keys().next().value;
+      if (oldestKey !== undefined) {
+         movieDetailsCache.delete(oldestKey);
+      }
+    }
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
