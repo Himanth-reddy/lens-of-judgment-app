@@ -29,12 +29,12 @@ const Index = () => {
           image: getTMDBImage(m.poster_path, "w342"),
           tag: "Popular",
           rating: m.vote_average,
-          poster_path: m.poster_path,
         }));
         setMovies(popularMovies);
 
         // Mock "Most Interested" for now based on popular movies
-        setMostInterested(popularMovies.slice(0, 3).map((m: any, i: number) => ({
+        // We use the raw response data here to get the poster_path for w92 thumbnail generation
+        setMostInterested(response.data.slice(0, 3).map((m: any, i: number) => ({
           rank: i + 1,
           title: m.title,
           date: "Release Date", // TMDB data has release_date but let's keep it simple
@@ -42,7 +42,7 @@ const Index = () => {
           interested: Math.floor(Math.random() * 1000),
           // Optimization: Use w92 (thumbnail size) for small sidebar items (48px)
           image: getTMDBImage(m.poster_path, "w92"),
-          id: m.id,
+          id: m.id.toString(),
         })));
       } catch (error) {
         console.error("Failed to fetch movies", error);
