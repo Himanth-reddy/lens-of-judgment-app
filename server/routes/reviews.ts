@@ -1,6 +1,7 @@
 import express from "express";
 import { Review } from "../models/Review.js";
 import { reviewWriteRateLimiter } from "../middleware/rateLimiter.js";
+import { protect, AuthRequest } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -23,25 +24,26 @@ router.get("/user/:username", async (req, res) => {
   }
 });
 
-router.post("/", reviewWriteRateLimiter, async (req, res) => {
-  const { movieId, user, rating, text } = req.body;
+router.post("/", protect, reviewWriteRateLimiter, async (req: AuthRequest, res) => {
+  const { movieId, rating, text } = req.body;
+  const user = req.user?.username;
 
-  if (!movieId || !user || !rating || !text) {
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated" });
+  }
+
+  if (!movieId || !rating || !text) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
   // Security: Input type validation
-  if (typeof movieId !== "string" || typeof user !== "string" || typeof rating !== "string" || typeof text !== "string") {
+  if (typeof movieId !== "string" || typeof rating !== "string" || typeof text !== "string") {
     return res.status(400).json({ message: "Invalid input types" });
   }
 
   // Security: Input validation to prevent DoS via large payloads
   if (text.length > 1000) {
     return res.status(400).json({ message: "Review text exceeds 1000 characters" });
-  }
-
-  if (user.length > 50) {
-    return res.status(400).json({ message: "User name exceeds 50 characters" });
   }
 
   if (movieId.length > 50) {
@@ -70,11 +72,12 @@ router.post("/", reviewWriteRateLimiter, async (req, res) => {
 });
 
 // Edit a review
-router.put("/:reviewId", reviewWriteRateLimiter, async (req, res) => {
-  const { user, rating, text } = req.body;
+router.put("/:reviewId", protect, reviewWriteRateLimiter, async (req: AuthRequest, res) => {
+  const { rating, text } = req.body;
+  const user = req.user?.username;
 
-  if (!user || typeof user !== "string") {
-    return res.status(400).json({ message: "User is required" });
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated" });
   }
 
   if (!rating || !text) {
@@ -114,11 +117,11 @@ router.put("/:reviewId", reviewWriteRateLimiter, async (req, res) => {
 });
 
 // Like/unlike a review
-router.post("/:reviewId/like", reviewWriteRateLimiter, async (req, res) => {
-  const { user } = req.body;
+router.post("/:reviewId/like", protect, reviewWriteRateLimiter, async (req: AuthRequest, res) => {
+  const user = req.user?.username;
 
-  if (!user || typeof user !== "string") {
-    return res.status(400).json({ message: "User is required" });
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated" });
   }
 
   try {
@@ -144,11 +147,11 @@ router.post("/:reviewId/like", reviewWriteRateLimiter, async (req, res) => {
 });
 
 // Delete a review
-router.delete("/:reviewId", reviewWriteRateLimiter, async (req, res) => {
-  const { user } = req.body;
+router.delete("/:reviewId", protect, reviewWriteRateLimiter, async (req: AuthRequest, res) => {
+  const user = req.user?.username;
 
-  if (!user || typeof user !== "string") {
-    return res.status(400).json({ message: "User is required" });
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated" });
   }
 
   try {
