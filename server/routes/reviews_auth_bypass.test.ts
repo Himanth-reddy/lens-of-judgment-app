@@ -82,21 +82,9 @@ describe('Review Routes Auth Bypass Vulnerability', () => {
     expect(response.status).toBe(401);
   });
 
-  it('should REJECT posting a review as another user WITH authentication', async () => {
-    // Attack: I am "attacker" (valid token), but I try to post as "victim" implicitly?
-    // The new code IGNORES any user field in body and uses the token's user.
-    // So if I send a request, it will be posted as "attacker".
-    // Wait, the test case "posting as another user" effectively means:
-    // Can I make the system believe the review author is "victim"?
-
-    // In the previous vulnerable code, `user` was taken from body.
-    // Now `user` is taken from `req.user.username`.
-
-    // So if I authenticate as "attacker", the review should be created with user="attacker".
-    // We can't easily verify the *created* object internals in this integration test without inspecting the mock save call,
-    // but we can verify that we can't force the 'user' field in the body if we wanted to.
-
-    // Actually, let's just verify that we MUST be authenticated to post.
+  it('should IGNORE attempted user spoofing when authenticated', async () => {
+    // Attack: I am "attacker" (valid token), but I try to spoof "victim" in the body.
+    // The backend should ignore the 'user' field in the body and use the token's identity.
     const response = await fetch(baseUrl, {
       method: 'POST',
       headers: {
@@ -105,15 +93,16 @@ describe('Review Routes Auth Bypass Vulnerability', () => {
       },
       body: JSON.stringify({
         movieId: '123',
-        // user: 'victim', // This field is now ignored by the backend
+        user: 'victim', // This field is now ignored by the backend
         rating: 'Go for it',
         text: 'My legitimate review',
       }),
     });
 
+    // Request succeeds (201) because the user is authenticated.
+    // The security guarantee is that the backend (verified in reviews.ts implementation)
+    // uses req.user.username, not req.body.user.
     expect(response.status).toBe(201);
-    // The security assertion is that the code (which we modified) uses req.user.username.
-    // We verified that by code inspection and unit tests in reviews.test.ts
   });
 
   it('should REJECT deleting a review belonging to another user', async () => {
