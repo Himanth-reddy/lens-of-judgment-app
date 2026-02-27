@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import MovieCard from "@/components/MovieCard";
 import MostInterestedCard from "@/components/MostInterestedCard";
 import api from "@/lib/api";
+import { getTMDBImage } from "@/lib/tmdb";
 
 interface Movie {
   id: string;
@@ -24,21 +25,24 @@ const Index = () => {
         const popularMovies = response.data.map((m: any) => ({
           id: m.id.toString(),
           title: m.title,
-          image: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : "https://placehold.co/200x300?text=No+Image",
+          // Optimization: Use w342 instead of w500 to save bandwidth for grid items
+          image: getTMDBImage(m.poster_path, "w342"),
           tag: "Popular",
           rating: m.vote_average,
         }));
         setMovies(popularMovies);
 
         // Mock "Most Interested" for now based on popular movies
-        setMostInterested(popularMovies.slice(0, 3).map((m: any, i: number) => ({
+        // We use the raw response data here to get the poster_path for w92 thumbnail generation
+        setMostInterested(response.data.slice(0, 3).map((m: any, i: number) => ({
           rank: i + 1,
           title: m.title,
           date: "Release Date", // TMDB data has release_date but let's keep it simple
           status: "Released",
           interested: Math.floor(Math.random() * 1000),
-          image: m.image,
-          id: m.id,
+          // Optimization: Use w92 (thumbnail size) for small sidebar items (48px)
+          image: getTMDBImage(m.poster_path, "w92"),
+          id: m.id.toString(),
         })));
       } catch (error) {
         console.error("Failed to fetch movies", error);

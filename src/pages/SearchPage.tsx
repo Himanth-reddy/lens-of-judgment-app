@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import MovieCard from "@/components/MovieCard";
 import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
+import { getTMDBImage } from "@/lib/tmdb";
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
@@ -67,7 +68,7 @@ const SearchPage = () => {
         const movies = response.data.map((m: any) => ({
           id: m.id.toString(),
           title: m.title,
-          image: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : "https://placehold.co/200x300?text=No+Image",
+          image: getTMDBImage(m.poster_path, "w342"),
           tag: "Result",
           rating: m.vote_average,
         }));

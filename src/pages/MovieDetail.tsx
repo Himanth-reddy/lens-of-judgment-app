@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { getTMDBImage } from "@/lib/tmdb";
 
 const ratingColorMap: Record<string, string> = {
   Perfection: "bg-accent text-accent-foreground",
@@ -87,7 +88,7 @@ const MovieDetail = () => {
         const movieRes = await api.get(`/movies/${id}`);
         setMovie({
           title: movieRes.data.title,
-          image: movieRes.data.poster_path ? `https://image.tmdb.org/t/p/w500${movieRes.data.poster_path}` : "https://placehold.co/200x300?text=No+Image",
+          image: getTMDBImage(movieRes.data.poster_path, "w342"),
           genre: movieRes.data.genres?.map((g: Genre) => g.name).join(", ") || "Unknown",
           year: movieRes.data.release_date?.split("-")[0] || "Unknown",
         });
