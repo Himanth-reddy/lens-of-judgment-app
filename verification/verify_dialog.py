@@ -29,11 +29,13 @@ async def verify_dialog():
         ))
 
         try:
-            # We need to set the token in localStorage to trigger the auth state in the app
-            await page.goto("http://localhost:8080")
-            await page.evaluate("localStorage.setItem('token', 'fake-token')")
+            # We need to set the token in localStorage *before* the app first loads
+            # Use an init script so AuthProvider sees the token on initial mount
+            await page.add_init_script(
+                "window.localStorage.setItem('token', 'fake-token');"
+            )
 
-            # Now navigate to the movie page
+            # Now navigate directly to the movie page
             await page.goto("http://localhost:8080/movie/123")
 
             # Wait for the delete button to appear (it's the trash icon)
