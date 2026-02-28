@@ -8,25 +8,34 @@ async def verify_dialog():
         page = await browser.new_page()
 
         # Mock API responses
-        await page.route("**/api/movies/*", lambda route: route.fulfill(
-            status=200,
-            content_type="application/json",
-            body='{"title": "Test Movie", "poster_path": "/path.jpg", "genres": [{"name": "Action"}], "release_date": "2023-01-01"}'
-        ))
+        async def handle_movie_route(route):
+            await route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"title": "Test Movie", "poster_path": "/path.jpg", "genres": [{"name": "Action"}], "release_date": "2023-01-01"}'
+            )
 
-        await page.route("**/api/reviews/*", lambda route: route.fulfill(
-            status=200,
-            content_type="application/json",
-            # Ensure the review user matches the mocked logged-in user
-            body='[{"_id": "r1", "user": "testuser", "rating": "Perfection", "text": "Great movie", "likes": 0, "createdAt": "2023-01-01"}]'
-        ))
+        await page.route("**/api/movies/*", handle_movie_route)
+
+        async def handle_reviews_route(route):
+            await route.fulfill(
+                status=200,
+                content_type="application/json",
+                # Ensure the review user matches the mocked logged-in user
+                body='[{"_id": "r1", "user": "testuser", "rating": "Perfection", "text": "Great movie", "likes": 0, "createdAt": "2023-01-01"}]'
+            )
+
+        await page.route("**/api/reviews/*", handle_reviews_route)
 
         # Mock auth check - this is critical for the delete button to show up
-        await page.route("**/api/auth/me", lambda route: route.fulfill(
-            status=200,
-            content_type="application/json",
-            body='{"username": "testuser", "id": "u1"}'
-        ))
+        async def handle_auth_route(route):
+            await route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"_id": "u1", "username": "testuser", "email": "testuser@example.com"}'
+            )
+
+        await page.route("**/api/auth/me", handle_auth_route)
 
         try:
             # We need to set the token in localStorage *before* the app first loads
