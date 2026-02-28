@@ -21,10 +21,15 @@ router.post("/register", authRateLimiter, async (req, res) => {
     return res.status(400).json({ message: "Please fill all fields" });
   }
 
-  const userExists = await User.findOne({ email });
+  // Security: Prevent NoSQL injection
+  if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ message: "Invalid input types" });
+  }
+
+  const userExists = await User.findOne({ $or: [{ email }, { username }] });
 
   if (userExists) {
-    return res.status(400).json({ message: "User already exists" });
+    return res.status(400).json({ message: "User already exists with this email or username" });
   }
 
   const user = await User.create({
@@ -51,6 +56,11 @@ router.post("/login", authRateLimiter, async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ message: "Please fill all fields" });
+  }
+
+  // Security: Prevent NoSQL injection
+  if (typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ message: "Invalid input types" });
   }
 
   const user = await User.findOne({ email });
