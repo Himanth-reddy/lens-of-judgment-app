@@ -26,10 +26,10 @@ router.post("/register", authRateLimiter, async (req, res) => {
     return res.status(400).json({ message: "Invalid input types" });
   }
 
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ $or: [{ email }, { username }] });
 
   if (userExists) {
-    return res.status(400).json({ message: "User already exists" });
+    return res.status(400).json({ message: "User already exists with this email or username" });
   }
 
   const user = await User.create({
