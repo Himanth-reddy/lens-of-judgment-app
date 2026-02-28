@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, type Mock } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -53,9 +54,9 @@ describe("MovieDetail", () => {
 
     render(
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/movies/1"]}>
+        <MemoryRouter initialEntries={["/movie/1"]}>
           <Routes>
-            <Route path="/movies/:id" element={<MovieDetail />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
           </Routes>
         </MemoryRouter>
       </TooltipProvider>
@@ -88,9 +89,9 @@ describe("MovieDetail", () => {
 
     render(
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/movies/1"]}>
+        <MemoryRouter initialEntries={["/movie/1"]}>
           <Routes>
-            <Route path="/movies/:id" element={<MovieDetail />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
           </Routes>
         </MemoryRouter>
       </TooltipProvider>
@@ -111,5 +112,67 @@ describe("MovieDetail", () => {
     // Back link
     const backLink = screen.getByRole("link", { name: /go back/i });
     expect(backLink).toBeInTheDocument();
+  });
+
+  it("requires confirmation before deleting a review", async () => {
+    // Reset mocks
+    vi.clearAllMocks();
+
+    const mockReviewsWithId = [
+      { _id: "review1", user: "TestUser", rating: "Perfection", text: "Great movie", likes: 10 },
+    ];
+
+    // Mock successful API responses
+    (api.get as Mock).mockImplementation((url: string) => {
+      if (url.includes("/movies/")) {
+        return Promise.resolve({ data: mockMovie });
+      }
+      if (url.includes("/reviews/")) {
+        return Promise.resolve({ data: mockReviewsWithId });
+      }
+      return Promise.reject(new Error("Not found"));
+    });
+
+    // Mock delete API
+    (api.delete as Mock).mockResolvedValue({ data: {} });
+
+    render(
+      <TooltipProvider>
+        <MemoryRouter initialEntries={["/movie/1"]}>
+          <Routes>
+            <Route path="/movie/:id" element={<MovieDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </TooltipProvider>
+    );
+
+    // Wait for content to load
+    await waitFor(() => expect(screen.getByText("Great movie")).toBeInTheDocument());
+
+    // Find and click the delete button (trash icon)
+    const deleteButton = screen.getByRole("button", { name: /delete review/i });
+    await userEvent.click(deleteButton);
+
+    // Verify confirmation dialog appears
+    expect(screen.getByText("Are you absolutely sure?")).toBeInTheDocument();
+    expect(screen.getByText(/This action cannot be undone/i)).toBeInTheDocument();
+
+    // Click cancel first
+    const cancelButton = screen.getByRole("button", { name: /cancel/i });
+    await userEvent.click(cancelButton);
+
+    // Verify dialog closed and API was NOT called
+    await waitFor(() => expect(screen.queryByText("Are you absolutely sure?")).not.toBeInTheDocument());
+    expect(api.delete).not.toHaveBeenCalled();
+
+    // Click delete again
+    await userEvent.click(deleteButton);
+
+    // Click confirm delete
+    const confirmButton = screen.getByRole("button", { name: "Delete" });
+    await userEvent.click(confirmButton);
+
+    // Verify API was called
+    expect(api.delete).toHaveBeenCalledWith("/reviews/review1", { data: { user: "TestUser" } });
   });
 });

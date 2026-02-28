@@ -7,6 +7,17 @@ import ReviewForm from "@/components/ReviewForm";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -467,13 +478,33 @@ const MovieDetail = () => {
                             >
                               <Pencil size={14} />
                             </button>
-                            <button
-                              onClick={() => review._id && handleDeleteReview(review._id)}
-                              className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              aria-label="Delete review"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                  aria-label="Delete review"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete your review.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => review._id && handleDeleteReview(review._id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </>
                         )}
                       </div>
