@@ -21,6 +21,11 @@ router.post("/register", authRateLimiter, async (req, res) => {
     return res.status(400).json({ message: "Please fill all fields" });
   }
 
+  // Security: Prevent NoSQL injection
+  if (typeof username !== "string" || typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ message: "Invalid input types" });
+  }
+
   const userExists = await User.findOne({ email });
 
   if (userExists) {
@@ -51,6 +56,11 @@ router.post("/login", authRateLimiter, async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ message: "Please fill all fields" });
+  }
+
+  // Security: Prevent NoSQL injection
+  if (typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ message: "Invalid input types" });
   }
 
   const user = await User.findOne({ email });

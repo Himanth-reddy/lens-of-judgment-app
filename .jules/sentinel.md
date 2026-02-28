@@ -12,3 +12,8 @@
 **Vulnerability:** A strict "fail-fast" check for missing `JWT_SECRET` caused deployment failures because the environment wasn't configured.
 **Learning:** Security controls that block deployment without a fallback can be disruptive.
 **Prevention:** Instead of crashing, generate a secure random secret at runtime. This maintains security (no hardcoded secret) but allows the app to start, with the trade-off that sessions are not persisted across restarts.
+
+## 2025-10-24 - NoSQL Injection via Express Request Body
+**Vulnerability:** Authentication endpoints (`/api/auth/login` and `/api/auth/register`) passed `req.body.email` and `req.body.password` directly to Mongoose queries (e.g., `User.findOne({ email })`). If an attacker passed an object like `{"$ne": null}` instead of a string, it could bypass authentication or enumerate users.
+**Learning:** Express `req.body` parses JSON payloads dynamically. Without strict input type validation, attackers can inject MongoDB query operators.
+**Prevention:** Always explicitly validate that user input fields intended to be strings are strictly of type `string` before passing them to database queries.
