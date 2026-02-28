@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "server": "tsx server/index.ts",
-    "build": "vite build && tsc -p tsconfig.server.json",
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "server": "node ./node_modules/tsx/dist/cli.mjs server/index.ts",
+    "build": "node ./node_modules/vite/bin/vite.js build && node ./node_modules/typescript/bin/tsc -p tsconfig.server.json",
     "start": "node dist-server/index.js",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "lint": "node ./node_modules/eslint/bin/eslint.js .",
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
+    "test": "node ./node_modules/vitest/vitest.mjs run",
+    "test:watch": "node ./node_modules/vitest/vitest.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

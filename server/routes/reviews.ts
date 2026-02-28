@@ -1,9 +1,25 @@
 import express from "express";
 import { Review } from "../models/Review.js";
+import { Notification } from "../models/Notification.js";
 import { reviewWriteRateLimiter } from "../middleware/rateLimiter.js";
 import { protect, AuthRequest } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+router.get("/liked/me", protect, async (req: AuthRequest, res) => {
+  const user = req.user?.username;
+
+  if (!user) {
+    return res.status(401).json({ message: "User not authenticated" });
+  }
+
+  try {
+    const likedReviews = await Review.find({ likedBy: user }).sort({ createdAt: -1 });
+    res.json(likedReviews);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
 router.get("/:movieId", async (req, res) => {
   try {
@@ -132,6 +148,7 @@ router.post("/:reviewId/like", protect, reviewWriteRateLimiter, async (req: Auth
 
     const likedBy: string[] = review.get("likedBy") || [];
     const index = likedBy.indexOf(user);
+    const didLike = index === -1;
     if (index === -1) {
       likedBy.push(user);
     } else {
@@ -140,6 +157,37 @@ router.post("/:reviewId/like", protect, reviewWriteRateLimiter, async (req: Auth
     review.set("likedBy", likedBy);
     review.likes = likedBy.length;
     const updatedReview = await review.save();
+
+    const reviewId = review._id?.toString();
+    if (reviewId && review.user !== user) {
+      if (didLike) {
+        await Notification.findOneAndUpdate(
+          {
+            recipient: review.user,
+            actor: user,
+            type: "review_like",
+            reviewId,
+          },
+          {
+            recipient: review.user,
+            actor: user,
+            type: "review_like",
+            reviewId,
+            movieId: review.movieId,
+            read: false,
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      } else {
+        await Notification.findOneAndDelete({
+          recipient: review.user,
+          actor: user,
+          type: "review_like",
+          reviewId,
+        });
+      }
+    }
+
     res.json(updatedReview);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

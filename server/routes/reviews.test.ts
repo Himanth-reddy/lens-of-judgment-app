@@ -25,6 +25,13 @@ vi.mock('../models/Review.js', () => {
   return { Review: ReviewMock };
 });
 
+vi.mock('../models/Notification.js', () => ({
+  Notification: {
+    findOneAndUpdate: vi.fn().mockResolvedValue(null),
+    findOneAndDelete: vi.fn().mockResolvedValue(null),
+  },
+}));
+
 // Mock Auth Middleware
 vi.mock('../middleware/authMiddleware.js', () => ({
   protect: (req: any, res: any, next: any) => {
@@ -176,6 +183,23 @@ describe('Review Routes Security', () => {
     expect(response.status).toBe(409);
     const data = await response.json();
     expect(data.message).toBe('You have already reviewed this movie');
+  });
+
+  it('should return reviews liked by the authenticated user', async () => {
+    const { Review } = await import('../models/Review.js');
+    const likedReviews = [{ _id: 'liked1', user: 'author1', likedBy: ['testuser'], movieId: '123', text: 'Nice' }];
+    (Review as any).find.mockReturnValueOnce({
+      sort: vi.fn().mockResolvedValue(likedReviews),
+    });
+
+    const response = await fetch(`${baseUrl}/liked/me`, {
+      method: 'GET',
+      headers: { ...authHeader },
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(likedReviews);
+    expect((Review as any).find).toHaveBeenCalledWith({ likedBy: 'testuser' });
   });
 
   it('should return 404 when deleting a non-existent review', async () => {

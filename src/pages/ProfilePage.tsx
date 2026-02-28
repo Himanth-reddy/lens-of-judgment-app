@@ -1,4 +1,4 @@
-import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Tag, Pencil, Check } from "lucide-react";
+import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Tag, Pencil, Check, Clock, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
 
 import { useState, useEffect } from "react";
@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import api from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getTMDBImage } from "@/lib/tmdb";
 
 const tabs = ["Reviews", "Watchlist", "Liked"];
 
@@ -32,6 +33,14 @@ interface UserReview {
   createdAt: string;
 }
 
+type BookmarkStatus = "watchlist" | "watched";
+
+interface BookmarkItem {
+  movieId: string;
+  status: BookmarkStatus;
+  addedAt?: string;
+}
+
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -47,8 +56,13 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("Reviews");
   const [userReviews, setUserReviews] = useState<UserReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+  const [likedReviews, setLikedReviews] = useState<UserReview[]>([]);
+  const [likedLoading, setLikedLoading] = useState(false);
   const [userTags, setUserTags] = useState<string[]>([]);
   const [movieTitles, setMovieTitles] = useState<Record<string, string>>({});
+  const [moviePosters, setMoviePosters] = useState<Record<string, string>>({});
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [editRating, setEditRating] = useState<Rating>("Skip");
   const [editText, setEditText] = useState("");
@@ -79,31 +93,70 @@ const ProfilePage = () => {
     fetchUserReviews();
   }, [user?.username]);
 
-  // Fetch movie titles for reviews
   useEffect(() => {
-    const fetchMovieTitles = async () => {
-      const uniqueMovieIds = [...new Set(userReviews.map((r) => r.movieId))];
-      const missingIds = uniqueMovieIds.filter((id) => !movieTitles[id]);
+    const fetchProfileLists = async () => {
+      if (!user?.username) return;
+
+      setBookmarksLoading(true);
+      setLikedLoading(true);
+      try {
+        const [bookmarksRes, likedRes] = await Promise.all([
+          api.get("/bookmarks"),
+          api.get("/reviews/liked/me"),
+        ]);
+        setBookmarks((bookmarksRes.data || []).map((item: any) => ({
+          movieId: item.movieId,
+          status: item.status,
+          addedAt: item.addedAt,
+        })));
+        setLikedReviews(likedRes.data || []);
+      } catch (error) {
+        console.error("Failed to fetch profile lists:", error);
+      } finally {
+        setBookmarksLoading(false);
+        setLikedLoading(false);
+      }
+    };
+
+    fetchProfileLists();
+  }, [user?.username]);
+
+  useEffect(() => {
+    const fetchMovieDetails = async () => {
+      const uniqueMovieIds = [
+        ...new Set([
+          ...userReviews.map((review) => review.movieId),
+          ...bookmarks.map((bookmark) => bookmark.movieId),
+          ...likedReviews.map((review) => review.movieId),
+        ]),
+      ];
+
+      const missingIds = uniqueMovieIds.filter((movieId) => !movieTitles[movieId]);
       if (missingIds.length === 0) return;
 
       const newTitles: Record<string, string> = {};
+      const newPosters: Record<string, string> = {};
       await Promise.all(
         missingIds.map(async (movieId) => {
           try {
             const res = await api.get(`/movies/${movieId}`);
             newTitles[movieId] = res.data.title;
+            newPosters[movieId] = getTMDBImage(res.data.poster_path, "w185");
           } catch {
             newTitles[movieId] = `Movie #${movieId}`;
+            newPosters[movieId] = getTMDBImage(null, "w185");
           }
         })
       );
+
       setMovieTitles((prev) => ({ ...prev, ...newTitles }));
+      setMoviePosters((prev) => ({ ...prev, ...newPosters }));
     };
 
-    if (userReviews.length > 0) {
-      fetchMovieTitles();
+    if (userReviews.length > 0 || bookmarks.length > 0 || likedReviews.length > 0) {
+      fetchMovieDetails();
     }
-  }, [userReviews]);
+  }, [userReviews, bookmarks, likedReviews, movieTitles]);
 
   // Load user tags from user data
   useEffect(() => {
@@ -182,6 +235,26 @@ const ProfilePage = () => {
       toast({ title: "Review updated", description: "Your review has been updated." });
     } catch (error) {
       toast({ title: "Error", description: "Failed to update review.", variant: "destructive" });
+    }
+  };
+
+  const updateBookmarkStatus = async (movieId: string, status: BookmarkStatus) => {
+    try {
+      const { data } = await api.put(`/bookmarks/${movieId}`, { status });
+      setBookmarks(data.bookmarks || []);
+      toast({ title: status === "watched" ? "Marked as watched" : "Moved to watchlist" });
+    } catch (error) {
+      toast({ title: "Failed to update bookmark", variant: "destructive" });
+    }
+  };
+
+  const removeBookmark = async (movieId: string) => {
+    try {
+      const { data } = await api.delete(`/bookmarks/${movieId}`);
+      setBookmarks(data.bookmarks || []);
+      toast({ title: "Removed from bookmarks" });
+    } catch (error) {
+      toast({ title: "Failed to remove bookmark", variant: "destructive" });
     }
   };
 
@@ -379,18 +452,108 @@ const ProfilePage = () => {
         )}
 
         {activeTab === "Watchlist" && (
-          <div className="text-center py-16 text-muted-foreground animate-fade-in">
-            <Bookmark size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium mb-1">Your watchlist is empty</p>
-            <p className="text-sm">Add movies to your watchlist to keep track of what you want to watch.</p>
+          <div className="animate-fade-in">
+            {bookmarksLoading ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <p className="text-sm">Loading watchlist...</p>
+              </div>
+            ) : bookmarks.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Bookmark size={48} className="mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium mb-1">Your watchlist is empty</p>
+                <p className="text-sm">Add movies to your watchlist to keep track of what you want to watch.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bookmarks.map((bookmark) => (
+                  <div key={`${bookmark.movieId}-${bookmark.status}`} className="bg-card rounded-xl p-4 border border-border">
+                    <div className="flex gap-3">
+                      <img
+                        src={moviePosters[bookmark.movieId] || getTMDBImage(null, "w185")}
+                        alt={movieTitles[bookmark.movieId] || `Movie #${bookmark.movieId}`}
+                        className="w-14 h-20 rounded-md object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/movie/${bookmark.movieId}`} className="text-sm font-medium text-primary hover:underline truncate block">
+                          {movieTitles[bookmark.movieId] || `Movie #${bookmark.movieId}`}
+                        </Link>
+                        <div className="mt-1">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs ${
+                              bookmark.status === "watched"
+                                ? "bg-meter-goforit/20 text-meter-goforit"
+                                : "bg-secondary text-muted-foreground"
+                            }`}
+                          >
+                            {bookmark.status === "watched" ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                            {bookmark.status === "watched" ? "Watched" : "Watchlist"}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {bookmark.status === "watchlist" ? (
+                            <button
+                              onClick={() => updateBookmarkStatus(bookmark.movieId, "watched")}
+                              className="text-xs px-2.5 py-1.5 rounded-full bg-meter-goforit/20 text-meter-goforit hover:bg-meter-goforit/30"
+                            >
+                              Mark Watched
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => updateBookmarkStatus(bookmark.movieId, "watchlist")}
+                              className="text-xs px-2.5 py-1.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80"
+                            >
+                              Move to Watchlist
+                            </button>
+                          )}
+                          <button
+                            onClick={() => removeBookmark(bookmark.movieId)}
+                            className="text-xs px-2.5 py-1.5 rounded-full bg-destructive/15 text-destructive hover:bg-destructive/25"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === "Liked" && (
-          <div className="text-center py-16 text-muted-foreground animate-fade-in">
-            <Heart size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium mb-1">No liked movies yet</p>
-            <p className="text-sm">Movies you like will appear here.</p>
+          <div className="animate-fade-in">
+            {likedLoading ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <p className="text-sm">Loading liked reviews...</p>
+              </div>
+            ) : likedReviews.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Heart size={48} className="mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium mb-1">No liked reviews yet</p>
+                <p className="text-sm">Reviews you like will appear here.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {likedReviews.map((review) => (
+                  <div key={review._id} className="bg-card rounded-xl p-4 border border-border">
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/movie/${review.movieId}`} className="text-sm font-medium text-primary hover:underline">
+                        {movieTitles[review.movieId] || `Movie #${review.movieId}`}
+                      </Link>
+                      <span className="text-xs text-muted-foreground">by @{review.user}</span>
+                    </div>
+                    <div className="mt-2">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${ratingBadge[review.rating] || "bg-secondary"}`}>
+                        {review.rating}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3 line-clamp-3">{review.text}</p>
+                    <div className="mt-2 text-xs text-muted-foreground">♥ {review.likes || 0} likes</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>

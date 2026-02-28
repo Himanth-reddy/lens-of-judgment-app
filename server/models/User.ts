@@ -6,6 +6,11 @@ export interface IUser extends Document {
   email: string;
   password: string;
   tags: string[];
+  bookmarks: {
+    movieId: string;
+    status: "watchlist" | "watched";
+    addedAt: Date;
+  }[];
   createdAt: Date;
   matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
@@ -27,6 +32,26 @@ const userSchema = new Schema<IUser>({
   },
   tags: {
     type: [String],
+    default: [],
+  },
+  bookmarks: {
+    type: [
+      {
+        movieId: {
+          type: String,
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: ["watchlist", "watched"],
+          default: "watchlist",
+        },
+        addedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     default: [],
   },
   createdAt: {
