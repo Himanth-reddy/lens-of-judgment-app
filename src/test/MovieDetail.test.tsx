@@ -138,9 +138,9 @@ describe("MovieDetail", () => {
 
     render(
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/movies/1"]}>
+        <MemoryRouter initialEntries={["/movie/1"]}>
           <Routes>
-            <Route path="/movies/:id" element={<MovieDetail />} />
+            <Route path="/movie/:id" element={<MovieDetail />} />
           </Routes>
         </MemoryRouter>
       </TooltipProvider>
