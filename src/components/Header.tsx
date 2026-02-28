@@ -3,11 +3,44 @@ import LOJLogo from "./LOJLogo";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
 const Header = () => {
   const location = useLocation();
   const path = location.pathname;
   const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await api.get("/notifications/unread-count");
+        if (isMounted) {
+          setUnreadCount(data?.unreadCount || 0);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setUnreadCount(0);
+        }
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user?.username, path]);
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -26,7 +59,13 @@ const Header = () => {
 
           <div className="flex items-center gap-2">
             <NavItem to="/search" active={path === "/search"} icon={<Search size={18} />} title="Search" />
-            <NavItem to="/notifications" active={path === "/notifications"} icon={<Bell size={18} />} title="Notifications" />
+            <NavItem
+              to="/notifications"
+              active={path === "/notifications"}
+              icon={<Bell size={18} />}
+              title="Notifications"
+              badgeCount={unreadCount}
+            />
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -61,12 +100,14 @@ const NavItem = ({
   active,
   icon,
   title,
+  badgeCount,
 }: {
   to: string;
   label?: string;
   active: boolean;
   icon: React.ReactNode;
   title?: string;
+  badgeCount?: number;
 }) => {
   const displayTitle = title || label;
 
@@ -80,7 +121,14 @@ const NavItem = ({
             active ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
           }`}
         >
-          {icon}
+          <span className="relative">
+            {icon}
+            {badgeCount && badgeCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] leading-4 text-center">
+                {badgeCount > 9 ? "9+" : badgeCount}
+              </span>
+            )}
+          </span>
           {label && (
             <span
               className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${

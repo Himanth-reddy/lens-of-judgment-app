@@ -8,6 +8,9 @@ import { getJwtSecret } from "./config/auth.js";
 import movieRoutes from "./routes/movies.js";
 import reviewRoutes from "./routes/reviews.js";
 import authRoutes from "./routes/auth.js";
+import bookmarkRoutes from "./routes/bookmarks.js";
+import notificationRoutes from "./routes/notifications.js";
+import communityRoutes from "./routes/community.js";
 
 dotenv.config();
 
@@ -70,6 +73,9 @@ app.use("/api", (req, res, next) => {
 app.use("/api/movies", movieRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/bookmarks", bookmarkRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/community", communityRoutes);
 
 // Serve Static Files in Production
 const __dirname = path.resolve();

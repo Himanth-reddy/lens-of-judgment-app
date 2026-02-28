@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Share2, Trash2, Pencil, Check, X, Heart } from "lucide-react";
+import { ArrowLeft, Share2, Trash2, Pencil, Check, X, Heart, Bookmark, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
 import RatingMeter from "@/components/RatingMeter";
 import ReviewForm from "@/components/ReviewForm";
@@ -76,6 +76,7 @@ const formatDate = (dateString?: string) => {
 };
 
 type Rating = "Skip" | "Timepass" | "Go for it" | "Perfection";
+type BookmarkStatus = "none" | "watchlist" | "watched";
 
 const MovieDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -86,6 +87,8 @@ const MovieDetail = () => {
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [editRating, setEditRating] = useState<Rating>("Skip");
   const [editText, setEditText] = useState("");
+  const [bookmarkStatus, setBookmarkStatus] = useState<BookmarkStatus>("none");
+  const [bookmarkUpdating, setBookmarkUpdating] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -115,6 +118,96 @@ const MovieDetail = () => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const fetchBookmarkStatus = async () => {
+      if (!id || !user) {
+        setBookmarkStatus("none");
+        return;
+      }
+
+      try {
+        const { data } = await api.get("/bookmarks");
+        const existing = (data || []).find((bookmark: any) => bookmark.movieId === id);
+        setBookmarkStatus(existing?.status || "none");
+      } catch (error) {
+        setBookmarkStatus("none");
+      }
+    };
+
+    fetchBookmarkStatus();
+  }, [id, user?.username]);
+
+  const toggleWatchlist = async () => {
+    if (!id) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to use bookmarks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBookmarkUpdating(true);
+    try {
+      if (bookmarkStatus === "none") {
+        await api.post("/bookmarks", { movieId: id, status: "watchlist" });
+        setBookmarkStatus("watchlist");
+        toast({
+          title: "Added to watchlist",
+          description: "You can manage this in Bookmarks.",
+        });
+      } else {
+        await api.delete(`/bookmarks/${id}`);
+        setBookmarkStatus("none");
+        toast({
+          title: "Removed from bookmarks",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Action failed",
+        description: "Could not update bookmark.",
+        variant: "destructive",
+      });
+    } finally {
+      setBookmarkUpdating(false);
+    }
+  };
+
+  const markAsWatched = async () => {
+    if (!id) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to use bookmarks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBookmarkUpdating(true);
+    try {
+      if (bookmarkStatus === "none") {
+        await api.post("/bookmarks", { movieId: id, status: "watched" });
+      } else {
+        await api.put(`/bookmarks/${id}`, { status: "watched" });
+      }
+      setBookmarkStatus("watched");
+      toast({
+        title: "Marked as watched",
+      });
+    } catch (error) {
+      toast({
+        title: "Action failed",
+        description: "Could not update watched status.",
+        variant: "destructive",
+      });
+    } finally {
+      setBookmarkUpdating(false);
+    }
+  };
 
   const handleReviewSubmit = async (rating: string, text: string) => {
     if (!id) return;
@@ -348,19 +441,41 @@ const MovieDetail = () => {
         <section className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">LOJ Meter</h2>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
-                  aria-label="Share this movie"
-                >
-                  <Share2 size={18} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Share this movie</p>
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleWatchlist}
+                disabled={bookmarkUpdating}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                  bookmarkStatus === "none"
+                    ? "bg-card text-muted-foreground border-border hover:text-foreground"
+                    : "bg-primary/10 text-primary border-primary/30"
+                }`}
+              >
+                <Bookmark size={12} />
+                {bookmarkStatus === "none" ? "Add Watchlist" : bookmarkStatus === "watchlist" ? "Saved" : "Watched"}
+              </button>
+              <button
+                onClick={markAsWatched}
+                disabled={bookmarkUpdating || bookmarkStatus === "watched"}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-meter-goforit/20 text-meter-goforit border border-meter-goforit/30 disabled:opacity-50"
+              >
+                <CheckCircle2 size={12} />
+                Mark Watched
+              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
+                    aria-label="Share this movie"
+                  >
+                    <Share2 size={18} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Share this movie</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
           <RatingMeter dominantFeeling={dominantFeeling} dominantPercentage={dominantPercentage} totalVotes={totalVotes} breakdown={breakdown} />
         </section>

@@ -142,10 +142,35 @@ A full-stack movie review and rating platform where users can rate, review, and 
 | ------ | ------------------------------- | ---------------------------- |
 | GET    | `/api/reviews/:movieId`         | Get reviews for a movie      |
 | GET    | `/api/reviews/user/:username`   | Get a user's reviews         |
+| GET    | `/api/reviews/liked/me`         | Get reviews liked by me      |
 | POST   | `/api/reviews`                  | Create a review              |
 | PUT    | `/api/reviews/:reviewId`        | Edit a review                |
 | POST   | `/api/reviews/:reviewId/like`   | Like or unlike a review      |
 | DELETE | `/api/reviews/:reviewId`        | Delete a review              |
+
+### Bookmarks
+
+| Method | Endpoint                  | Description                        |
+| ------ | ------------------------- | ---------------------------------- |
+| GET    | `/api/bookmarks`          | Get my bookmarks                   |
+| POST   | `/api/bookmarks`          | Add a movie to watchlist/watched   |
+| PUT    | `/api/bookmarks/:movieId` | Update bookmark status             |
+| DELETE | `/api/bookmarks/:movieId` | Remove a bookmark                  |
+
+### Notifications
+
+| Method | Endpoint                          | Description                      |
+| ------ | --------------------------------- | -------------------------------- |
+| GET    | `/api/notifications`              | Get my notifications             |
+| GET    | `/api/notifications/unread-count` | Get unread notifications count   |
+| PUT    | `/api/notifications/read-all`     | Mark all notifications as read   |
+| PUT    | `/api/notifications/:id/read`     | Mark one notification as read    |
+
+### Community
+
+| Method | Endpoint                  | Description                      |
+| ------ | ------------------------- | -------------------------------- |
+| GET    | `/api/community/overview` | Get latest reviews + top users   |
 
 ## License
 
