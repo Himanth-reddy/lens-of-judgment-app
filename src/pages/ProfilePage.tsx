@@ -1,5 +1,6 @@
 import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Tag, Pencil, Check, Clock, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -271,9 +272,19 @@ const ProfilePage = () => {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-teal flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-lg">
               {user?.username ? user.username[0].toUpperCase() : "G"}
             </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary/50 transition-colors">
-              <Edit2 size={12} className="text-muted-foreground" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="Edit Profile Picture"
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary/50 transition-colors"
+                >
+                  <Edit2 size={12} className="text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit Profile Picture</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <h1 className="text-2xl font-bold text-foreground">{user?.username || "Guest"}</h1>
           <p className="text-muted-foreground text-sm">@{user?.username || "guest"}</p>
@@ -282,15 +293,33 @@ const ProfilePage = () => {
             <button className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
               Edit Profile
             </button>
-            <button className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all">
-              <Settings size={16} />
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-all"
-            >
-              <LogOut size={16} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="Settings"
+                  className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+                >
+                  <Settings size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Settings</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleSignOut}
+                  aria-label="Log Out"
+                  className="p-2 rounded-full bg-card border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-all"
+                >
+                  <LogOut size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Log Out</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {/* User Tags */}
@@ -421,20 +450,34 @@ const ProfilePage = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => startEditReview(review)}
-                              className="p-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                              aria-label="Edit review"
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteReview(review._id)}
-                              className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              aria-label="Delete review"
-                            >
-                              <X size={14} />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => startEditReview(review)}
+                                  className="p-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                                  aria-label="Edit review"
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Edit review</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleDeleteReview(review._id)}
+                                  className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                  aria-label="Delete review"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Delete review</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground">{review.text}</p>
