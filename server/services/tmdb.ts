@@ -58,10 +58,37 @@ export const searchMovies = async (query: string) => {
   }
 };
 
+const movieDetailsCache = new Map<string, { data: unknown; timestamp: number }>();
+const MOVIE_DETAILS_CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+const MOVIE_DETAILS_MAX_CACHE_SIZE = 1000;
+
 export const getMovieDetails = async (id: string) => {
+  const now = Date.now();
+  const cached = movieDetailsCache.get(id);
+
+  if (cached) {
+    if (now - cached.timestamp < MOVIE_DETAILS_CACHE_DURATION) {
+      return cached.data;
+    }
+    // Expired
+    movieDetailsCache.delete(id);
+  }
+
   try {
     const response = await getClient().get(`/movie/${id}`);
-    return response.data;
+    const data = response.data;
+
+    // Prevent memory leaks by capping cache size
+    if (movieDetailsCache.size >= MOVIE_DETAILS_MAX_CACHE_SIZE) {
+      // Evict the oldest entry (first item in Map)
+      const oldestKey = movieDetailsCache.keys().next().value;
+      if (oldestKey) {
+        movieDetailsCache.delete(oldestKey);
+      }
+    }
+
+    movieDetailsCache.set(id, { data, timestamp: now });
+    return data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       return null;
