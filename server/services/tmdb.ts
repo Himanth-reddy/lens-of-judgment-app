@@ -50,18 +50,19 @@ const searchCache = new Map<string, { data: unknown; timestamp: number }>();
 const SEARCH_CACHE_MAX_SIZE = 500;
 
 export const searchMovies = async (query: string) => {
+  const normalizedQuery = query.trim().toLowerCase();
   const now = Date.now();
-  const cached = searchCache.get(query);
+  const cached = searchCache.get(normalizedQuery);
 
   if (cached) {
     if (now - cached.timestamp < CACHE_DURATION) {
-      // Move to back of Map to maintain LRU order
-      searchCache.delete(query);
-      searchCache.set(query, { data: cached.data, timestamp: now });
+      // Move to back of Map to maintain LRU order without changing expiry timestamp
+      searchCache.delete(normalizedQuery);
+      searchCache.set(normalizedQuery, cached);
       return cached.data;
     }
     // Expired
-    searchCache.delete(query);
+    searchCache.delete(normalizedQuery);
   }
 
   try {
@@ -78,7 +79,7 @@ export const searchMovies = async (query: string) => {
       }
     }
 
-    searchCache.set(query, { data, timestamp: now });
+    searchCache.set(normalizedQuery, { data, timestamp: now });
     return data;
   } catch (error) {
     console.error("Error searching movies:", error);
@@ -96,9 +97,9 @@ export const getMovieDetails = async (id: string) => {
 
   if (cached) {
     if (now - cached.timestamp < MOVIE_DETAILS_CACHE_DURATION) {
-      // Move to back of Map to maintain LRU order
+      // Move to back of Map to maintain LRU order, preserving original fetch timestamp
       movieDetailsCache.delete(id);
-      movieDetailsCache.set(id, { data: cached.data, timestamp: now });
+      movieDetailsCache.set(id, cached);
       return cached.data;
     }
     // Expired
@@ -163,9 +164,9 @@ export const discoverMoviesByGenre = async (genreId: string) => {
 
   if (cached) {
     if (now - cached.timestamp < CACHE_DURATION) {
-      // Move to back of Map to maintain LRU order
+      // Move to back of Map to maintain LRU order, preserving original fetch timestamp for expiry
       discoverCache.delete(genreId);
-      discoverCache.set(genreId, { data: cached.data, timestamp: now });
+      discoverCache.set(genreId, cached);
       return cached.data;
     }
     // Expired
