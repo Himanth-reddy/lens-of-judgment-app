@@ -46,12 +46,40 @@ export const getPopularMovies = async () => {
   }
 };
 
+const searchCache = new Map<string, { data: unknown; timestamp: number }>();
+const SEARCH_CACHE_MAX_SIZE = 500;
+
 export const searchMovies = async (query: string) => {
+  const now = Date.now();
+  const cached = searchCache.get(query);
+
+  if (cached) {
+    if (now - cached.timestamp < CACHE_DURATION) {
+      // Move to back of Map to maintain LRU order
+      searchCache.delete(query);
+      searchCache.set(query, { data: cached.data, timestamp: now });
+      return cached.data;
+    }
+    // Expired
+    searchCache.delete(query);
+  }
+
   try {
     const response = await getClient().get("/search/movie", {
       params: { query },
     });
-    return response.data.results;
+    const data = response.data.results;
+
+    // Prevent memory leaks by capping cache size
+    if (searchCache.size >= SEARCH_CACHE_MAX_SIZE) {
+      const oldestKey = searchCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        searchCache.delete(oldestKey);
+      }
+    }
+
+    searchCache.set(query, { data, timestamp: now });
+    return data;
   } catch (error) {
     console.error("Error searching movies:", error);
     throw error;
@@ -68,6 +96,9 @@ export const getMovieDetails = async (id: string) => {
 
   if (cached) {
     if (now - cached.timestamp < MOVIE_DETAILS_CACHE_DURATION) {
+      // Move to back of Map to maintain LRU order
+      movieDetailsCache.delete(id);
+      movieDetailsCache.set(id, { data: cached.data, timestamp: now });
       return cached.data;
     }
     // Expired
@@ -82,7 +113,7 @@ export const getMovieDetails = async (id: string) => {
     if (movieDetailsCache.size >= MOVIE_DETAILS_MAX_CACHE_SIZE) {
       // Evict the oldest entry (first item in Map)
       const oldestKey = movieDetailsCache.keys().next().value;
-      if (oldestKey) {
+      if (oldestKey !== undefined) {
         movieDetailsCache.delete(oldestKey);
       }
     }
@@ -123,12 +154,39 @@ export const getGenres = async () => {
   }
 };
 
+const discoverCache = new Map<string, { data: unknown; timestamp: number }>();
+const DISCOVER_CACHE_MAX_SIZE = 100;
+
 export const discoverMoviesByGenre = async (genreId: string) => {
+  const now = Date.now();
+  const cached = discoverCache.get(genreId);
+
+  if (cached) {
+    if (now - cached.timestamp < CACHE_DURATION) {
+      // Move to back of Map to maintain LRU order
+      discoverCache.delete(genreId);
+      discoverCache.set(genreId, { data: cached.data, timestamp: now });
+      return cached.data;
+    }
+    // Expired
+    discoverCache.delete(genreId);
+  }
+
   try {
     const response = await getClient().get("/discover/movie", {
       params: { with_genres: genreId, sort_by: "popularity.desc" },
     });
-    return response.data.results;
+    const data = response.data.results;
+
+    if (discoverCache.size >= DISCOVER_CACHE_MAX_SIZE) {
+      const oldestKey = discoverCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        discoverCache.delete(oldestKey);
+      }
+    }
+
+    discoverCache.set(genreId, { data, timestamp: now });
+    return data;
   } catch (error) {
     console.error("Error discovering movies:", error);
     throw error;
