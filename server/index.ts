@@ -11,6 +11,7 @@ import authRoutes from "./routes/auth.js";
 import bookmarkRoutes from "./routes/bookmarks.js";
 import notificationRoutes from "./routes/notifications.js";
 import communityRoutes from "./routes/community.js";
+import { securityHeaders } from "./middleware/security.js";
 
 dotenv.config();
 
@@ -40,6 +41,8 @@ const corsOptions = {
   credentials: true,
 };
 
+app.disable("x-powered-by");
+app.use(securityHeaders);
 app.use(cors(corsOptions));
 app.use(express.json());
 

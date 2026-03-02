@@ -17,3 +17,8 @@
 **Vulnerability:** Authentication endpoints (`/api/auth/login` and `/api/auth/register`) passed `req.body.email` and `req.body.password` directly to Mongoose queries (e.g., `User.findOne({ email })`). If an attacker passed an object like `{"$ne": null}` instead of a string, it could bypass authentication or enumerate users.
 **Learning:** Express `req.body` parses JSON payloads dynamically. Without strict input type validation, attackers can inject MongoDB query operators.
 **Prevention:** Always explicitly validate that user input fields intended to be strings are strictly of type `string` before passing them to database queries.
+
+## 2025-11-06 - Missing Security Headers Without Dependencies
+**Vulnerability:** Missing basic security headers (CSP, nosniff, etc.) which leaves the application vulnerable to basic XSS, MIME sniffing, and framing attacks.
+**Learning:** Standard security header packages like `helmet` might be blocked by architectural constraints (e.g., "no new dependencies"), leaving applications unprotected if developers assume they are the only way to secure headers.
+**Prevention:** Implement a custom, lightweight security headers middleware that explicitly sets essential headers (like `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`) using the native Express `res.setHeader` API to ensure defense-in-depth even under strict dependency rules.
