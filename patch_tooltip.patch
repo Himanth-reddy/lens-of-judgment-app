@@ -1,9 +1,0 @@
---- src/pages/ProfilePage.tsx
-+++ src/pages/ProfilePage.tsx
-@@ -9,6 +9,7 @@
- import api from "@/lib/api";
- import { useToast } from "@/hooks/use-toast";
- import { getTMDBImage } from "@/lib/tmdb";
-+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
- const tabs = ["Reviews", "Watchlist", "Liked"];
