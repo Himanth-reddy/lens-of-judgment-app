@@ -35,4 +35,10 @@ const reviewSchema = new mongoose.Schema({
 // Prevent duplicate reviews: one review per user per movie
 reviewSchema.index({ movieId: 1, user: 1 }, { unique: true });
 
+// Optimize frequent queries sorting by createdAt
+reviewSchema.index({ movieId: 1, createdAt: -1 });
+reviewSchema.index({ user: 1, createdAt: -1 });
+reviewSchema.index({ likedBy: 1, createdAt: -1 });
+reviewSchema.index({ createdAt: -1 });
+
 export const Review = mongoose.model("Review", reviewSchema);
