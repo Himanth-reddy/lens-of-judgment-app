@@ -4,6 +4,7 @@ import MovieCard from "@/components/MovieCard";
 import { useState, useEffect, useRef } from "react";
 import api from "@/lib/api";
 import { getTMDBImage } from "@/lib/tmdb";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
@@ -117,9 +118,20 @@ const SearchPage = () => {
             autoFocus
           />
           {query && (
-            <button onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X size={18} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Clear search</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
 
@@ -157,6 +169,7 @@ const SearchPage = () => {
                     key={m.id}
                     onClick={() => setQuery(m.title)}
                     className="px-4 py-2 rounded-full bg-card border border-border text-sm text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-200"
+                    aria-label={`Search ${m.title}`}
                   >
                     {m.title}
                   </button>
