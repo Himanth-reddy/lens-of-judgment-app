@@ -41,6 +41,5 @@ reviewSchema.index({ user: 1, createdAt: -1 });
 reviewSchema.index({ likedBy: 1, createdAt: -1 });
 reviewSchema.index({ createdAt: -1 });
 // Performance optimizations for frequent queries
-main
 
 export const Review = mongoose.model("Review", reviewSchema);
