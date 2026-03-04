@@ -586,22 +586,36 @@ const MovieDetail = () => {
                         </span>
                         {user && user.username === review.user && review._id && (
                           <>
-                            <button
-                              onClick={() => startEditReview(review)}
-                              className="p-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                              aria-label="Edit review"
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
                                 <button
-                                  className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                  aria-label="Delete review"
+                                  onClick={() => startEditReview(review)}
+                                  className="p-1.5 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                                  aria-label="Edit review"
                                 >
-                                  <Trash2 size={14} />
+                                  <Pencil size={14} />
                                 </button>
-                              </AlertDialogTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Edit review</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <AlertDialog>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertDialogTrigger asChild>
+                                    <button
+                                      className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                      aria-label="Delete review"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delete review</p>
+                                </TooltipContent>
+                              </Tooltip>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
