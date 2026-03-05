@@ -1,6 +1,17 @@
 import { Settings, MessageSquare, Bookmark, Heart, LogOut, Edit2, X, Tag, Pencil, Check, Clock, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -464,20 +475,40 @@ const ProfilePage = () => {
                                 <p>Edit review</p>
                               </TooltipContent>
                             </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={() => handleDeleteReview(review._id)}
-                                  className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                  aria-label="Delete review"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Delete review</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            <AlertDialog>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertDialogTrigger asChild>
+                                    <button
+                                      className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                      aria-label="Delete review"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delete review</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete your review.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteReview(review._id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground">{review.text}</p>
