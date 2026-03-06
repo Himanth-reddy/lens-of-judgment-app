@@ -1,12 +1,12 @@
 import express from "express";
 import { Review } from "../models/Review.js";
 import { Notification } from "../models/Notification.js";
-import { reviewWriteRateLimiter, readRateLimiter } from "../middleware/rateLimiter.js";
+import { reviewWriteRateLimiter } from "../middleware/rateLimiter.js";
 import { protect, AuthRequest } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/liked/me", protect, readRateLimiter, async (req: AuthRequest, res) => {
+router.get("/liked/me", protect, async (req: AuthRequest, res) => {
   const user = req.user?.username;
 
   if (!user) {
@@ -21,7 +21,7 @@ router.get("/liked/me", protect, readRateLimiter, async (req: AuthRequest, res) 
   }
 });
 
-router.get("/:movieId", readRateLimiter, async (req, res) => {
+router.get("/:movieId", async (req, res) => {
   try {
     const reviews = await Review.find({ movieId: req.params.movieId }).sort({ createdAt: -1 }).lean();
     res.json(reviews);
@@ -31,7 +31,7 @@ router.get("/:movieId", readRateLimiter, async (req, res) => {
 });
 
 // Get reviews by a specific user
-router.get("/user/:username", readRateLimiter, async (req, res) => {
+router.get("/user/:username", async (req, res) => {
   try {
     const reviews = await Review.find({ user: req.params.username }).sort({ createdAt: -1 }).lean();
     res.json(reviews);
