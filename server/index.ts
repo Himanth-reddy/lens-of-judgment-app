@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
+import { readRateLimiter } from "./middleware/rateLimiter.js";
 import { getJwtSecret } from "./config/auth.js";
 import movieRoutes from "./routes/movies.js";
 import reviewRoutes from "./routes/reviews.js";
@@ -71,11 +72,11 @@ app.use("/api", (req, res, next) => {
 
 // API Routes
 app.use("/api/movies", movieRoutes);
-app.use("/api/reviews", reviewRoutes);
+app.use("/api/reviews", readRateLimiter, reviewRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/community", communityRoutes);
+app.use("/api/community", readRateLimiter, communityRoutes);
 
 // Serve Static Files in Production
 const __dirname = path.resolve();
