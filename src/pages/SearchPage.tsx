@@ -194,12 +194,20 @@ const SearchPage = () => {
                         <Clock size={14} className="opacity-40" />
                         {s}
                       </button>
-                      <button
-                        onClick={() => clearRecentSearch(s)}
-                        className="text-muted-foreground hover:text-foreground p-1"
-                      >
-                        <X size={14} />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => clearRecentSearch(s)}
+                            className="text-muted-foreground hover:text-foreground p-1"
+                            aria-label={`Remove ${s} from recent searches`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Remove from history</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   ))}
                 </div>
