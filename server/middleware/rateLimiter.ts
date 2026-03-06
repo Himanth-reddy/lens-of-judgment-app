@@ -24,3 +24,15 @@ export const reviewWriteRateLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many requests, please try again later" },
 });
+
+/**
+ * Standard rate limiter for read operations (e.g., getting reviews).
+ * Allows a maximum of 300 requests per 15-minute window per IP.
+ */
+export const readRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { message: "Too many requests, please try again later" },
+});
