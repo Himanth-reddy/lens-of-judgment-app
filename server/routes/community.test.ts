@@ -47,7 +47,7 @@ describe("Community Routes", () => {
     (Review as any).aggregate.mockResolvedValueOnce(topReviewers);
     (Review as any).find.mockReturnValueOnce({
       sort: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue(latestReviews),
+        limit: vi.fn().mockReturnValue({ lean: vi.fn().mockResolvedValue(latestReviews) }),
       }),
     });
 

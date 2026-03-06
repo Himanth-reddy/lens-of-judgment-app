@@ -14,7 +14,7 @@ router.get("/liked/me", protect, async (req: AuthRequest, res) => {
   }
 
   try {
-    const likedReviews = await Review.find({ likedBy: user }).sort({ createdAt: -1 });
+    const likedReviews = await Review.find({ likedBy: user }).sort({ createdAt: -1 }).lean();
     res.json(likedReviews);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -23,7 +23,7 @@ router.get("/liked/me", protect, async (req: AuthRequest, res) => {
 
 router.get("/:movieId", async (req, res) => {
   try {
-    const reviews = await Review.find({ movieId: req.params.movieId }).sort({ createdAt: -1 });
+    const reviews = await Review.find({ movieId: req.params.movieId }).sort({ createdAt: -1 }).lean();
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -33,7 +33,7 @@ router.get("/:movieId", async (req, res) => {
 // Get reviews by a specific user
 router.get("/user/:username", async (req, res) => {
   try {
-    const reviews = await Review.find({ user: req.params.username }).sort({ createdAt: -1 });
+    const reviews = await Review.find({ user: req.params.username }).sort({ createdAt: -1 }).lean();
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
