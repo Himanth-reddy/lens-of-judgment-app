@@ -6,7 +6,7 @@ import { protect, AuthRequest } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/liked/me", protect, readRateLimiter, async (req: AuthRequest, res) => {
+router.get("/liked/me", readRateLimiter, protect, async (req: AuthRequest, res) => {
   const user = req.user?.username;
 
   if (!user) {
