@@ -12,7 +12,7 @@ vi.mock('../models/Review.js', () => {
   }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (ReviewMock as any).find = vi.fn().mockReturnValue({
-    sort: vi.fn().mockResolvedValue([]),
+    sort: vi.fn().mockReturnValue({ lean: vi.fn().mockResolvedValue([]) }),
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (ReviewMock as any).findOne = vi.fn().mockResolvedValue(null);
@@ -189,7 +189,7 @@ describe('Review Routes Security', () => {
     const { Review } = await import('../models/Review.js');
     const likedReviews = [{ _id: 'liked1', user: 'author1', likedBy: ['testuser'], movieId: '123', text: 'Nice' }];
     (Review as any).find.mockReturnValueOnce({
-      sort: vi.fn().mockResolvedValue(likedReviews),
+      sort: vi.fn().mockReturnValue({ lean: vi.fn().mockResolvedValue(likedReviews) }),
     });
 
     const response = await fetch(`${baseUrl}/liked/me`, {

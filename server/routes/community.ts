@@ -24,7 +24,8 @@ router.get("/overview", async (_req, res) => {
       ]),
       Review.find({})
         .sort({ createdAt: -1 })
-        .limit(20),
+        .limit(20)
+        .lean(),
     ]);
 
     res.json({
