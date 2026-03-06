@@ -1,9 +1,10 @@
 import express from "express";
 import { Review } from "../models/Review.js";
+import { readRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-router.get("/overview", async (_req, res) => {
+router.get("/overview", readRateLimiter, async (_req, res) => {
   try {
     const [topReviewers, latestReviews] = await Promise.all([
       Review.aggregate([
