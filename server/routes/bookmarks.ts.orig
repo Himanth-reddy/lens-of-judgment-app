@@ -9,7 +9,7 @@ const isValidMovieId = (movieId: unknown) => typeof movieId === "string" && movi
 
 const isValidStatus = (status: unknown): status is "watchlist" | "watched" => status === "watchlist" || status === "watched";
 
-router.get("/", readRateLimiter, protect, async (req: AuthRequest, res) => {
+router.get("/", protect, readRateLimiter, async (req: AuthRequest, res) => {
   if (!req.user) {
     return res.status(401).json({ message: "Not authorized" });
   }
