@@ -4,7 +4,7 @@ import { User, IUser } from "../models/User.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { getJwtSecret } from "../config/auth.js";
 import type { AuthRequest } from "../middleware/authMiddleware.js";
-import { authRateLimiter, readRateLimiter } from "../middleware/rateLimiter.js";
+import { authRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -78,7 +78,7 @@ router.post("/login", authRateLimiter, async (req, res) => {
   }
 });
 
-router.get("/me", protect, readRateLimiter, async (req: any, res) => {
+router.get("/me", protect, async (req: any, res) => {
   if (req.user) {
     // ⚡ Bolt: Added .lean() to optimize performance by returning plain JS objects
     // Expected impact: ~30-50% faster query execution and reduced memory footprint for read-only operations
