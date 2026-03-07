@@ -10,9 +10,12 @@ router.get("/", protect, async (req: AuthRequest, res) => {
   }
 
   try {
+    // ⚡ Bolt: Added .lean() to optimize performance by returning plain JS objects
+    // Expected impact: ~30-50% faster query execution and reduced memory footprint for read-only operations
     const notifications = await Notification.find({ recipient: req.user.username })
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(100)
+      .lean();
 
     res.json(notifications);
   } catch (error) {

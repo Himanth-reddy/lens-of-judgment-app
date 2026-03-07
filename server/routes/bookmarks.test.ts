@@ -58,7 +58,9 @@ describe("Bookmark Routes", () => {
     const { User } = await import("../models/User.js");
     const bookmarks = [{ movieId: "550", status: "watchlist", addedAt: new Date().toISOString() }];
     (User as any).findById.mockReturnValueOnce({
-      select: vi.fn().mockResolvedValue({ bookmarks }),
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue({ bookmarks }),
+      }),
     });
 
     const response = await fetch(baseUrl, {
