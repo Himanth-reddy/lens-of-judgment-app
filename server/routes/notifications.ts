@@ -10,9 +10,12 @@ router.get("/", protect, async (req: AuthRequest, res) => {
   }
 
   try {
+    // Performance: Use .lean() for read-only queries to bypass Mongoose document hydration
+    // This reduces memory footprint and CPU usage when returning large lists.
     const notifications = await Notification.find({ recipient: req.user.username })
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(100)
+      .lean();
 
     res.json(notifications);
   } catch (error) {
