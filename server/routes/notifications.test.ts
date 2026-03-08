@@ -65,7 +65,7 @@ describe("Notification Routes", () => {
     const notifications = [{ _id: "n1", recipient: "testuser", read: false }];
     (Notification as any).find.mockReturnValueOnce({
       sort: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue(notifications),
+        limit: vi.fn().mockReturnValue({ lean: vi.fn().mockResolvedValue(notifications) }),
       }),
     });
 
