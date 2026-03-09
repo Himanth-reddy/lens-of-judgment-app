@@ -41,20 +41,18 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
       </div>
 
       <p className="text-sm text-muted-foreground mb-3">How did this movie make you feel?</p>
-      <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Movie rating">
+      <div className="flex flex-wrap gap-2 mb-4">
         {ratings.map((r) => (
           <button
             key={r}
-            type="button"
             onClick={() => setSelected(r)}
-            aria-pressed={selected === r}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border-2 ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               selected === r
                 ? ratingColors[r]
                 : "bg-secondary text-muted-foreground border-transparent hover:text-foreground hover:border-border"
             }`}
           >
-            <span className="mr-1.5" aria-hidden="true">{ratingEmoji[r]}</span>
+            <span className="mr-1.5">{ratingEmoji[r]}</span>
             {r}
           </button>
         ))}
@@ -65,7 +63,6 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
         onChange={(e) => setReview(e.target.value)}
         placeholder="Write your review here..."
         maxLength={1000}
-        aria-label="Review text"
         className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-3 min-h-[80px]"
       />
 
