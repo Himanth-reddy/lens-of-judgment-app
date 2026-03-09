@@ -416,14 +416,12 @@ const ProfilePage = () => {
                             <X size={14} />
                           </button>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Edit rating">
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {(["Skip", "Timepass", "Go for it", "Perfection"] as Rating[]).map((r) => (
                             <button
                               key={r}
-                              type="button"
                               onClick={() => setEditRating(r)}
-                              aria-pressed={editRating === r}
-                              className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                                 editRating === r
                                   ? ratingBadge[r]
                                   : "bg-secondary text-muted-foreground border-transparent hover:text-foreground"
@@ -437,7 +435,6 @@ const ProfilePage = () => {
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
                           maxLength={1000}
-                          aria-label="Edit review text"
                           className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-2 min-h-[60px] text-sm"
                         />
                         <div className="flex items-center justify-between mt-2">
