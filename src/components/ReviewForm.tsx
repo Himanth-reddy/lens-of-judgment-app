@@ -40,11 +40,13 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
         <span className="text-foreground font-medium">@{displayName}</span>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-3">How did this movie make you feel?</p>
-      <div className="flex flex-wrap gap-2 mb-4">
+      <p id="rating-group-label" className="text-sm text-muted-foreground mb-3">How did this movie make you feel?</p>
+      <div className="flex flex-wrap gap-2 mb-4" role="group" aria-labelledby="rating-group-label">
         {ratings.map((r) => (
           <button
             key={r}
+            type="button"
+            aria-pressed={selected === r}
             onClick={() => setSelected(r)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               selected === r
@@ -52,7 +54,7 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
                 : "bg-secondary text-muted-foreground border-transparent hover:text-foreground hover:border-border"
             }`}
           >
-            <span className="mr-1.5">{ratingEmoji[r]}</span>
+            <span aria-hidden="true" className="mr-1.5">{ratingEmoji[r]}</span>
             {r}
           </button>
         ))}
@@ -63,6 +65,7 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
         onChange={(e) => setReview(e.target.value)}
         placeholder="Write your review here..."
         maxLength={1000}
+        aria-label="Write your review"
         className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-3 min-h-[80px]"
       />
 
