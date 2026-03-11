@@ -435,6 +435,7 @@ const ProfilePage = () => {
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
                           maxLength={1000}
+                          aria-label="Edit your review text"
                           className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-2 min-h-[60px] text-sm"
                         />
                         <div className="flex items-center justify-between mt-2">

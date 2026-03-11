@@ -112,6 +112,7 @@ const SearchPage = () => {
           <input
             type="text"
             placeholder="Search movies, series, people..."
+            aria-label="Search movies, series, people..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-card border border-border rounded-xl pl-12 pr-12 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all text-lg"
