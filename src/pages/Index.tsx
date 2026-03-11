@@ -125,7 +125,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">Most Interested</h3>
                 </div>
-                <select className="bg-secondary text-foreground text-xs rounded-md px-2 py-1 border border-border focus:border-primary/50 focus:outline-none transition-colors">
+                <select aria-label="Filter most interested by time" className="bg-secondary text-foreground text-xs rounded-md px-2 py-1 border border-border focus:border-primary/50 focus:outline-none transition-colors">
                   <option>This Week</option>
                   <option>This Month</option>
                 </select>
