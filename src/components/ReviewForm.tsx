@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 type Rating = "Skip" | "Timepass" | "Go for it" | "Perfection";
 
 interface ReviewFormProps {
-  onSubmit: (rating: Rating, review: string) => void;
+  onSubmit: (rating: Rating, review: string) => Promise<boolean | void> | void;
   username?: string;
 }
 
@@ -18,6 +19,21 @@ const ratingEmoji: Record<Rating, string> = {
 const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
   const [selected, setSelected] = useState<Rating | null>(null);
   const [review, setReview] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!selected) return;
+    setIsSubmitting(true);
+    try {
+      const success = await onSubmit(selected, review);
+      if (success !== false) {
+        setSelected(null);
+        setReview("");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const ratings: Rating[] = ["Skip", "Timepass", "Go for it", "Perfection"];
 
@@ -67,16 +83,18 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
         maxLength={1000}
         aria-label="Write your review"
         className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-3 min-h-[80px]"
+        disabled={isSubmitting}
       />
 
       <div className="flex items-center justify-between mt-3">
         <span className="text-xs text-muted-foreground">{review.length}/1000</span>
         <Button
-          onClick={() => selected && onSubmit(selected, review)}
-          disabled={!selected}
+          onClick={handleSubmit}
+          disabled={!selected || isSubmitting}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          Post
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          {isSubmitting ? "Posting..." : "Post"}
         </Button>
       </div>
     </div>
