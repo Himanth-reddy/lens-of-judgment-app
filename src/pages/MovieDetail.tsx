@@ -210,14 +210,14 @@ const MovieDetail = () => {
   };
 
   const handleReviewSubmit = async (rating: string, text: string) => {
-    if (!id) return;
+    if (!id) return false;
     if (!user) {
       toast({
         title: "Authentication required",
         description: "Please sign in to post a review",
         variant: "destructive",
       });
-      return;
+      return false;
     }
     if (hasUserReviewed) {
       toast({
@@ -225,7 +225,7 @@ const MovieDetail = () => {
         description: "You have already reviewed this movie",
         variant: "destructive",
       });
-      return;
+      return false;
     }
     try {
       const newReview = {
@@ -240,6 +240,7 @@ const MovieDetail = () => {
         title: "Review posted",
         description: "Thanks for sharing your thoughts!",
       });
+      return true;
     } catch (error: any) {
       const message = error?.response?.data?.message || "Failed to post review. Please try again.";
       toast({
@@ -247,6 +248,7 @@ const MovieDetail = () => {
         description: message,
         variant: "destructive",
       });
+      return false;
     }
   };
 
