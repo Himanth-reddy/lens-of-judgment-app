@@ -465,6 +465,13 @@ const MovieDetail = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({
+                        title: "Link copied to clipboard",
+                        description: "You can now share this movie with your friends.",
+                      });
+                    }}
                     className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary/50 transition-colors"
                     aria-label="Share this movie"
                   >
