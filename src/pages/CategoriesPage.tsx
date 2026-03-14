@@ -88,8 +88,10 @@ const CategoriesPage = () => {
         </div>
 
         {/* Genre pills */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-3 mb-8" role="group" aria-label="Filter by category">
           <button
+            type="button"
+            aria-pressed={active === "All"}
             onClick={() => setActive("All")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
               active === "All"
@@ -97,7 +99,7 @@ const CategoriesPage = () => {
                 : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
             }`}
           >
-            <Film size={16} />
+            <Film size={16} aria-hidden="true" />
             All
           </button>
           {genres.map((genre, i) => {
@@ -105,6 +107,8 @@ const CategoriesPage = () => {
             return (
               <button
                 key={genre.id}
+                type="button"
+                aria-pressed={isActive}
                 onClick={() => setActive(genre.name)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 animate-scale-in ${
                   isActive
