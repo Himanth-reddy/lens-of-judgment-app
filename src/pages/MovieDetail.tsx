@@ -534,13 +534,20 @@ const MovieDetail = () => {
                         </div>
                         <span className="text-sm font-medium text-foreground">@{review.user}</span>
                       </div>
-                      <button
-                        onClick={cancelEditReview}
-                        className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                        aria-label="Cancel edit"
-                      >
-                        <X size={14} />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={cancelEditReview}
+                            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            aria-label="Cancel edit"
+                          >
+                            <X size={14} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Cancel edit</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Edit rating">
                       {(["Skip", "Timepass", "Go for it", "Perfection"] as Rating[]).map((r) => (
