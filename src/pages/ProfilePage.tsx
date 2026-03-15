@@ -343,9 +343,16 @@ const ProfilePage = () => {
               {userTags.map((tag) => (
                 <span key={tag} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                   {tag}
-                  <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors" aria-label={`Remove tag ${tag}`}>
-                    <X size={12} />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-full" aria-label={`Remove tag ${tag}`}>
+                        <X size={12} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Remove tag</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </span>
               ))}
             </div>
@@ -408,13 +415,20 @@ const ProfilePage = () => {
                           <Link to={`/movie/${review.movieId}`} className="text-sm font-medium text-primary hover:underline">
                             {movieTitles[review.movieId] || `Movie #${review.movieId}`}
                           </Link>
-                          <button
-                            onClick={cancelEditReview}
-                            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                            aria-label="Cancel edit"
-                          >
-                            <X size={14} />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={cancelEditReview}
+                                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                aria-label="Cancel edit"
+                              >
+                                <X size={14} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Cancel edit</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {(["Skip", "Timepass", "Go for it", "Perfection"] as Rating[]).map((r) => (
