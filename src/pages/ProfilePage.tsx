@@ -345,7 +345,7 @@ const ProfilePage = () => {
                   {tag}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-full" aria-label={`Remove tag ${tag}`}>
+                      <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label={`Remove tag ${tag}`}>
                         <X size={12} />
                       </button>
                     </TooltipTrigger>
