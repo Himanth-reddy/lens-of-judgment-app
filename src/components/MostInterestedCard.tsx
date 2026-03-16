@@ -19,13 +19,16 @@ const rankGradients = [
 
 const MostInterestedCard = ({ item }: { item: MostInterestedItem }) => {
   const content = (
-    <div className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/40 hover:bg-card/80 transition-all duration-300 hover:translate-x-1">
+    <div
+      className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/40 hover:bg-card/80 transition-all duration-300 hover:translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      tabIndex={!item.id ? 0 : undefined}
+    >
       <span className={`font-display text-3xl w-8 bg-gradient-to-b ${rankGradients[(item.rank - 1) % 3]} bg-clip-text text-transparent`}>
         {item.rank}
       </span>
       <img
         src={item.image}
-        alt={item.title}
+        alt=""
         className="w-12 h-16 object-cover rounded transition-transform duration-300 group-hover:scale-105"
       />
       <div className="flex-1 min-w-0">
@@ -40,7 +43,7 @@ const MostInterestedCard = ({ item }: { item: MostInterestedItem }) => {
   );
 
   if (item.id) {
-    return <Link to={`/movie/${item.id}`}>{content}</Link>;
+    return <Link to={`/movie/${item.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">{content}</Link>;
   }
 
   return content;
