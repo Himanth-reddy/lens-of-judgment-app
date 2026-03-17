@@ -153,7 +153,7 @@ const BookmarksPage = () => {
               <Link to={`/movie/${item.movieId}`} className="flex gap-3 group">
                 <img
                   src={poster}
-                  alt={title}
+                  alt=""
                   className="w-16 h-24 rounded-md object-cover flex-shrink-0"
                   loading="lazy"
                 />

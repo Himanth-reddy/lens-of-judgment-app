@@ -559,7 +559,7 @@ const ProfilePage = () => {
                     <div className="flex gap-3">
                       <img
                         src={moviePosters[bookmark.movieId] || getTMDBImage(null, "w185")}
-                        alt={movieTitles[bookmark.movieId] || `Movie #${bookmark.movieId}`}
+                        alt=""
                         className="w-14 h-20 rounded-md object-cover"
                       />
                       <div className="flex-1 min-w-0">
