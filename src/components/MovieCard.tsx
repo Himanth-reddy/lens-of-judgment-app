@@ -22,7 +22,7 @@ const MovieCard = ({ id, title, image, tag, rating }: MovieCardProps) => {
       <div className="relative overflow-hidden rounded-lg aspect-[2/3] bg-secondary">
         <img
           src={image}
-          alt={title}
+          alt=""
           className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-110"
           loading="lazy"
         />

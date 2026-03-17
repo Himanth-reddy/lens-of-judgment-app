@@ -25,7 +25,7 @@ const MostInterestedCard = ({ item }: { item: MostInterestedItem }) => {
       </span>
       <img
         src={item.image}
-        alt={item.title}
+        alt=""
         className="w-12 h-16 object-cover rounded transition-transform duration-300 group-hover:scale-105"
       />
       <div className="flex-1 min-w-0">
