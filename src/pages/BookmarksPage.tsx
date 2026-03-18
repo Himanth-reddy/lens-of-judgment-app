@@ -150,10 +150,10 @@ const BookmarksPage = () => {
 
           return (
             <div key={`${item.movieId}-${item.status}`} className="bg-card border border-border rounded-xl p-3">
-              <Link to={`/movie/${item.movieId}`} className="flex gap-3 group">
+              <Link to={`/movie/${item.movieId}`} className="flex gap-3 group rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                 <img
                   src={poster}
-                  alt={title}
+                  alt=""
                   className="w-16 h-24 rounded-md object-cover flex-shrink-0"
                   loading="lazy"
                 />

@@ -25,7 +25,7 @@ const MostInterestedCard = ({ item }: { item: MostInterestedItem }) => {
       </span>
       <img
         src={item.image}
-        alt={item.title}
+        alt=""
         className="w-12 h-16 object-cover rounded transition-transform duration-300 group-hover:scale-105"
       />
       <div className="flex-1 min-w-0">
@@ -40,7 +40,7 @@ const MostInterestedCard = ({ item }: { item: MostInterestedItem }) => {
   );
 
   if (item.id) {
-    return <Link to={`/movie/${item.id}`}>{content}</Link>;
+    return <Link to={`/movie/${item.id}`} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">{content}</Link>;
   }
 
   return content;
