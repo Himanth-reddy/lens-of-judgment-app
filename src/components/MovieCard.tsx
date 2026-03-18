@@ -18,7 +18,7 @@ const tagColors: Record<string, string> = {
 
 const MovieCard = ({ id, title, image, tag, rating }: MovieCardProps) => {
   return (
-    <Link to={`/movie/${id}`} className="group block">
+    <Link to={`/movie/${id}`} className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
       <div className="relative overflow-hidden rounded-lg aspect-[2/3] bg-secondary">
         <img
           src={image}

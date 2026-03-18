@@ -40,7 +40,7 @@ const MostInterestedCard = ({ item }: { item: MostInterestedItem }) => {
   );
 
   if (item.id) {
-    return <Link to={`/movie/${item.id}`}>{content}</Link>;
+    return <Link to={`/movie/${item.id}`} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">{content}</Link>;
   }
 
   return content;
