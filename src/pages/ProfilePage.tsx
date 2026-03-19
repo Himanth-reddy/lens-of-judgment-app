@@ -430,10 +430,12 @@ const ProfilePage = () => {
                             </TooltipContent>
                           </Tooltip>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-3">
+                        <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Edit rating">
                           {(["Skip", "Timepass", "Go for it", "Perfection"] as Rating[]).map((r) => (
                             <button
                               key={r}
+                              type="button"
+                              aria-pressed={editRating === r}
                               onClick={() => setEditRating(r)}
                               className={`px-3 py-1 rounded-full text-xs font-medium transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                                 editRating === r
