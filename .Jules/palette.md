@@ -1,3 +1,3 @@
-## 2026-03-12 - Review Form Loading State
-**Learning:** Forms that submit data asynchronously without a loading state or a mechanism to clear their contents upon success often lead to user confusion and duplicate submissions, especially if the API response takes a noticeable amount of time.
-**Action:** When implementing asynchronous forms, ensure buttons have a clear disabled/loading state during submission, and design the form to explicitly reset its data when the parent component signals a successful submission.
+## 2024-05-24 - Contextual ARIA Labels for List Action Buttons
+**Learning:** When using screen readers on lists with repeated action buttons (like "Remove" or "Move to Watchlist"), simple button text causes the screen reader to repeatedly announce "Remove, button" without context, making it extremely confusing to determine which item is being acted upon.
+**Action:** Always interpolate the specific item's title or identifying information into the `aria-label` attribute (e.g., `aria-label={\`Remove ${title} from bookmarks\`}`) to provide clear context for assistive technologies.
