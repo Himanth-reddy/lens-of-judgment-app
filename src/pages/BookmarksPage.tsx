@@ -46,7 +46,7 @@ const BookmarksPage = () => {
     setLoading(true);
     try {
       const { data } = await api.get("/bookmarks");
-      const nextBookmarks: BookmarkItem[] = (data || []).map((item: any) => ({
+      const nextBookmarks: BookmarkItem[] = (data || []).map((item: BookmarkItem) => ({
         movieId: item.movieId,
         status: item.status,
         addedAt: item.addedAt,
@@ -85,6 +85,7 @@ const BookmarksPage = () => {
 
   useEffect(() => {
     fetchBookmarks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.username]);
 
   const watchlist = useMemo(
@@ -169,6 +170,7 @@ const BookmarksPage = () => {
                 {isWatchedSection ? (
                   <button
                     onClick={() => updateStatus(item.movieId, "watchlist")}
+                    aria-label={`Move ${title} to Watchlist`}
                     className="text-xs px-2.5 py-1.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80"
                   >
                     Move to Watchlist
@@ -176,6 +178,7 @@ const BookmarksPage = () => {
                 ) : (
                   <button
                     onClick={() => updateStatus(item.movieId, "watched")}
+                    aria-label={`Mark ${title} as watched`}
                     className="text-xs px-2.5 py-1.5 rounded-full bg-meter-goforit/20 text-meter-goforit hover:bg-meter-goforit/30"
                   >
                     Mark Watched
@@ -183,6 +186,7 @@ const BookmarksPage = () => {
                 )}
                 <button
                   onClick={() => removeBookmark(item.movieId)}
+                  aria-label={`Remove ${title} from bookmarks`}
                   className="text-xs px-2.5 py-1.5 rounded-full bg-destructive/15 text-destructive hover:bg-destructive/25"
                 >
                   Remove
