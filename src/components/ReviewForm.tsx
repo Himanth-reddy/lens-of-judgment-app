@@ -82,7 +82,7 @@ const ReviewForm = ({ onSubmit, username }: ReviewFormProps) => {
         placeholder="Write your review here..."
         maxLength={1000}
         aria-label="Write your review"
-        className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-3 min-h-[80px]"
+        className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary transition-colors py-3 min-h-[80px]"
         disabled={isSubmitting}
       />
 
