@@ -452,7 +452,7 @@ const ProfilePage = () => {
                           onChange={(e) => setEditText(e.target.value)}
                           maxLength={1000}
                           aria-label="Edit your review text"
-                          className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none py-2 min-h-[60px] text-sm"
+                          className="w-full bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary transition-colors py-2 min-h-[60px] text-sm"
                         />
                         <div className="flex items-center justify-between mt-2">
                           <span className="text-xs text-muted-foreground">{editText.length}/1000</span>
