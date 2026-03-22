@@ -103,7 +103,7 @@ const NotificationsPage = () => {
           {user && notifications.length > 0 && unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80"
+              className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors"
             >
               <CheckCheck size={12} />
               Mark all read
@@ -149,7 +149,8 @@ const NotificationsPage = () => {
                   {!notification.read && (
                     <button
                       onClick={() => markOneAsRead(notification._id)}
-                      className="text-xs px-2.5 py-1 rounded-full bg-secondary text-foreground hover:bg-secondary/80"
+                      aria-label={`Mark notification from ${notification.actor} as read`}
+                      className="text-xs px-2.5 py-1 rounded-full bg-secondary text-foreground hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors"
                     >
                       Mark read
                     </button>
