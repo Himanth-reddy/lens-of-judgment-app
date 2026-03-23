@@ -79,10 +79,12 @@ const AuthPage = () => {
           
           <div className="relative bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 p-8">
             {/* Toggle */}
-            <div className="flex mb-8 bg-secondary/50 rounded-xl p-1">
+            <div className="flex mb-8 bg-secondary/50 rounded-xl p-1" role="group" aria-label="Authentication mode">
               <button
+                type="button"
+                aria-pressed={isLogin}
                 onClick={() => setIsLogin(true)}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   isLogin
                     ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
                     : "text-muted-foreground hover:text-foreground"
@@ -91,8 +93,10 @@ const AuthPage = () => {
                 Sign In
               </button>
               <button
+                type="button"
+                aria-pressed={!isLogin}
                 onClick={() => setIsLogin(false)}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   !isLogin
                     ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-lg shadow-accent/25"
                     : "text-muted-foreground hover:text-foreground"
@@ -189,8 +193,9 @@ const AuthPage = () => {
             <p className="text-center text-xs text-muted-foreground mt-6">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
+                type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
+                className="text-primary hover:text-primary/80 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
               >
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
