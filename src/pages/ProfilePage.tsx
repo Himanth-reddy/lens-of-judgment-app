@@ -584,6 +584,7 @@ const ProfilePage = () => {
                           {bookmark.status === "watchlist" ? (
                             <button
                               onClick={() => updateBookmarkStatus(bookmark.movieId, "watched")}
+                              aria-label={`Mark ${movieTitles[bookmark.movieId] || `Movie #${bookmark.movieId}`} as watched`}
                               className="text-xs px-2.5 py-1.5 rounded-full bg-meter-goforit/20 text-meter-goforit hover:bg-meter-goforit/30"
                             >
                               Mark Watched
@@ -591,6 +592,7 @@ const ProfilePage = () => {
                           ) : (
                             <button
                               onClick={() => updateBookmarkStatus(bookmark.movieId, "watchlist")}
+                              aria-label={`Move ${movieTitles[bookmark.movieId] || `Movie #${bookmark.movieId}`} to Watchlist`}
                               className="text-xs px-2.5 py-1.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80"
                             >
                               Move to Watchlist
@@ -598,6 +600,7 @@ const ProfilePage = () => {
                           )}
                           <button
                             onClick={() => removeBookmark(bookmark.movieId)}
+                            aria-label={`Remove ${movieTitles[bookmark.movieId] || `Movie #${bookmark.movieId}`} from bookmarks`}
                             className="text-xs px-2.5 py-1.5 rounded-full bg-destructive/15 text-destructive hover:bg-destructive/25"
                           >
                             Remove
